@@ -895,7 +895,7 @@
                     <div class="hub-title">แนะนำคณะ</div>
                     <div class="hub-desc">MBTI หรือ Lifestyle Quiz พร้อม AI วิเคราะห์</div>
                 </div>
-                <div class="hub-card" id="hub-focus-card" onclick="nav('focus-select')" style="display:none;">
+                <div class="hub-card" onclick="nav('focus-select')">
                     <div class="hub-icon">📚</div>
                     <div class="hub-title">วิชาที่ควรโฟกัส</div>
                     <div class="hub-desc">วิเคราะห์ช่องว่างคะแนนรายวิชา</div>
@@ -1521,8 +1521,6 @@
                 const badge = document.getElementById('db-badge');
                 badge.className = 'db-badge online';
                 badge.innerText = `🟢 เชื่อมต่อแล้ว (${DB.length} หลักสูตร)`;
-                const focusCard = document.getElementById('hub-focus-card');
-                if (focusCard) focusCard.style.display = '';
             } catch (e) {
                 document.getElementById('db-badge').innerText = '🔴 ไม่ได้เชื่อมต่อ — รัน node server.js ด้วย';
             }
@@ -2292,39 +2290,23 @@
             </div>`;
                 }).join('');
 
-                // เรียก AI วิเคราะห์ผ่าน Anthropic API โดยตรง
+                // เรียก AI วิเคราะห์
                 const aiWrap = document.getElementById('focus-ai-wrap');
                 if (score) {
                     aiWrap.innerHTML = '<div style="text-align:center;"><div class="spinner"></div><p class="text-muted" style="margin-top:10px;">AI กำลังวิเคราะห์...</p></div>';
                     try {
-                        const subjectList = sorted.map(([k, w]) => ({
-                            key: k,
-                            name: SUBJ_MAP[k] || k,
-                            weight: (w / dream.items.length).toFixed(1),
-                            score: score[k] || 0
-                        }));
-                        const subj_text = subjectList.map(s =>
-                            `- ${s.name}: น้ำหนักเฉลี่ย ${s.weight}% | คะแนนของน้อง: ${s.score}`
-                        ).join('\n');
-
-                        const r = await fetch('https://api.anthropic.com/v1/messages', {
+                        const r = await fetch(`${AI_URL}/api/ai-focus`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                model: 'claude-sonnet-4-6',
-                                max_tokens: 1000,
-                                system: 'คุณเป็นที่ปรึกษาเตรียมสอบ TCAS ตอบภาษาไทย แบ่งเป็นข้อ ๆ กระชับ',
-                                messages: [{
-                                    role: 'user',
-                                    content: `ชุดคณะ: ${dream.name}\nวิชาสำคัญ (เรียงจากน้ำหนักมากไปน้อย):\n${subj_text}\n\nแนะนำวิชาที่ควรโฟกัสเพิ่มเติม และบอกว่าน้องควรพัฒนาจุดไหนก่อน`
-                                }]
-                            })
+                                subjects: sorted.map(([k, w]) => ({ key: k, name: SUBJ_MAP[k] || k, weight: w / dream.items.length, score: score[k] || 0 })),
+                                dreamName: dream.name,
+                            }),
                         });
                         const d = await r.json();
-                        const advice = d.content?.find(b => b.type === 'text')?.text || 'ไม่สามารถวิเคราะห์ได้';
                         aiWrap.innerHTML = `<div class="section-block" style="border-left:4px solid var(--primary);">
                     <div class="section-title">🤖 AI แนะนำ</div>
-                    <div style="line-height:1.8;white-space:pre-line;">${advice}</div></div>`;
+                    <div style="line-height:1.8;white-space:pre-line;">${d.advice || 'ไม่สามารถวิเคราะห์ได้'}</div></div>`;
                     } catch (e) {
                         aiWrap.innerHTML = `<div class="text-muted" style="text-align:center;">❌ ไม่สามารถเชื่อมต่อ AI ได้</div>`;
                     }
