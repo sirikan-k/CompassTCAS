@@ -421,3 +421,43 @@ def serve_frontend():
             return f.read()
     except Exception as e:
         return f"❌ เซิร์ฟเวอร์รันได้ แต่หาไฟล์ index.html ไม่เจอในระบบ: {str(e)}"
+    
+from fastapi.responses import HTMLResponse
+import os
+
+@app.get("/", response_class=HTMLResponse)
+def serve_frontend():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    path1 = os.path.join(base_dir, "index.html")
+    path2 = "index.html"
+    
+    if os.path.exists(path1):
+        with open(path1, "r", encoding="utf-8") as f:
+            return f.read()
+    elif os.path.exists(path2):
+        with open(path2, "r", encoding="utf-8") as f:
+            return f.read()
+    else:
+        # ถ้าหาไม่เจอจริงๆ ให้กางรายชื่อไฟล์ทั้งหมดบน Render ออกมาดูเลย!
+        try:
+            files_base = os.listdir(base_dir)
+            files_root = os.listdir(".")
+        except Exception as e:
+            files_base, files_root = str(e), str(e)
+            
+        return f"""
+        <html><body style="font-family:sans-serif; padding:20px;">
+            <h2 style="color:red;">❌ เซิร์ฟเวอร์รันแล้ว แต่ไม่พบไฟล์ index.html</h2>
+            <div style="background:#f4f4f4; padding:15px; border-radius:8px;">
+                <p><b>📂 ไฟล์ที่ Render มองเห็นตอนนี้มีดังนี้:</b></p>
+                <p><b>ในโฟลเดอร์โปรเจกต์:</b> {files_base}</p>
+                <p><b>ใน Root:</b> {files_root}</p>
+            </div>
+            <hr>
+            <h3>🛠️ วิธีแก้ไข (ดูจากรายชื่อไฟล์ด้านบน):</h3>
+            <ul>
+                <li>ถ้าไม่เห็นชื่อ <b>index.html</b> ในรายชื่อข้างบนเลย แปลว่ายังไม่ได้อัปโหลดขึ้น GitHub หรือไฟล์ตกหล่นครับ</li>
+                <li>ถ้าเห็นชื่อเป็น <b>Index.html</b> ให้กลับไปแก้ชื่อไฟล์ในคอมพิวเตอร์ให้เป็นตัวพิมพ์เล็กทั้งหมด แล้ว Push ขึ้น GitHub ใหม่</li>
+            </ul>
+        </body></html>
+        """
