@@ -405,6 +405,19 @@ def ai_focus(req: AIFocusRequest):
     return {"advice": advice}
 
 # =====================================================================
-# Serve static files (index.html) จาก root directory
+# Serve หน้าเว็บ index.html (แก้ไขใหม่เพื่อความชัวร์ 100%)
 # =====================================================================
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+from fastapi.responses import HTMLResponse
+
+@app.get("/", response_class=HTMLResponse)
+def serve_frontend():
+    # กำหนดตำแหน่งไฟล์ให้แม่นยำที่สุดบน Render
+    path = os.path.join(current_dir, "index.html")
+    if not os.path.exists(path):
+        path = "index.html" # เผื่อกรณีรันจาก root directory
+        
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return f"❌ เซิร์ฟเวอร์รันได้ แต่หาไฟล์ index.html ไม่เจอในระบบ: {str(e)}"
