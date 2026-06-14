@@ -1,891 +1,1653 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compass TCAS 🧭</title>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --bg: #FDFBF7; --card: #FFFFFF; --text: #3D2B1F; --muted: #9C8570;
-            --primary: #C8993A; --primary-hover: #B8892A; --primary-light: #FFF8EC;
-            --brown-100: #F5EDE0; --brown-200: #E8D5B7; --brown-300: #C9A87C;
-            --border: #EAE0D0; --danger: #D9534F; --success: #5BAD8D;
-            --warn: #E6A817; --purple: #9B7FD4; --purple-bg: #F0EBFF;
-            --risk1: #E74C3C; --risk2: #E67E22; --risk3: #F1C40F;
-            --risk4: #8DC85A; --risk5: #27AE60;
-            --radius: 16px; --radius-sm: 10px; --radius-lg: 24px;
-            --shadow: 0 4px 20px rgba(100,70,30,0.08);
-            --shadow-sm: 0 2px 8px rgba(100,70,30,0.06);
+            --bg: #FDFBF7;
+            --card: #FFFFFF;
+            --text: #3D2B1F;
+            --muted: #9C8570;
+            --primary: #C8993A;
+            --primary-hover: #B8892A;
+            --primary-light: #FFF8EC;
+            --brown-100: #F5EDE0;
+            --brown-200: #E8D5B7;
+            --brown-300: #C9A87C;
+            --border: #EAE0D0;
+            --danger: #D9534F;
+            --success: #5BAD8D;
+            --warn: #E6A817;
+            --purple: #9B7FD4;
+            --purple-bg: #F0EBFF;
+            --risk1: #E74C3C;
+            --risk2: #E67E22;
+            --risk3: #F1C40F;
+            --risk4: #8DC85A;
+            --risk5: #27AE60;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-lg: 24px;
+            --shadow: 0 4px 20px rgba(100, 70, 30, 0.08);
+            --shadow-sm: 0 2px 8px rgba(100, 70, 30, 0.06);
         }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 80px; }
-        h1,h2,h3,h4,.brand { font-family: 'Prompt', sans-serif; }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .brand {
+            font-family: 'Prompt', sans-serif;
+        }
 
         /* Navbar */
-        .navbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
-        .brand { font-size: 1.5rem; color: var(--primary); cursor: pointer; }
-        .db-badge { font-size: 0.8rem; font-weight: 600; padding: 5px 14px; border-radius: 99px; background: #fee2e2; color: #b91c1c; }
-        .db-badge.online { background: #dcfce7; color: #15803d; }
+        .navbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .db-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 5px 14px;
+            border-radius: 99px;
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .db-badge.online {
+            background: #dcfce7;
+            color: #15803d;
+        }
 
         /* Layout */
-        .page { display: none; animation: fadeUp 0.28s ease; }
-        .page.active { display: block; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-        .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+        .page {
+            display: none;
+            animation: fadeUp 0.28s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
 
         /* Cards */
-        .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); padding: 28px; margin-bottom: 16px; }
-        .card-hover { transition: all 0.2s; cursor: pointer; }
-        .card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--brown-300); }
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            padding: 28px;
+            margin-bottom: 16px;
+        }
+
+        .card-hover {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+            border-color: var(--brown-300);
+        }
 
         /* Buttons */
-        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 22px; border-radius: var(--radius-sm); font-family: 'Sarabun', sans-serif; font-size: 1rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; text-decoration: none; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,153,58,0.3); }
-        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
-        .btn-outline:hover { background: var(--primary-light); }
-        .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
-        .btn-ghost:hover { background: var(--brown-100); }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-lg { padding: 15px 32px; font-size: 1.1rem; border-radius: var(--radius); }
-        .btn-sm { padding: 7px 14px; font-size: 0.85rem; }
-        .btn-block { width: 100%; }
-        .btn-back { background: none; border: none; color: var(--muted); font-size: 0.95rem; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 24px; display: inline-flex; align-items: center; gap: 6px; font-family: 'Sarabun', sans-serif; }
-        .btn-back:hover { color: var(--text); }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 22px;
+            border-radius: var(--radius-sm);
+            font-family: 'Sarabun', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.18s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(200, 153, 58, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: var(--brown-100);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-lg {
+            padding: 15px 32px;
+            font-size: 1.1rem;
+            border-radius: var(--radius);
+        }
+
+        .btn-sm {
+            padding: 7px 14px;
+            font-size: 0.85rem;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 24px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        .btn-back:hover {
+            color: var(--text);
+        }
 
         /* Forms */
-        .form-group { margin-bottom: 18px; }
-        .form-label { display: block; font-weight: 600; margin-bottom: 7px; font-size: 0.95rem; color: var(--text); }
-        .form-control { width: 100%; padding: 11px 15px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 1rem; font-family: 'Sarabun', sans-serif; background: #FDFBF7; color: var(--text); transition: 0.18s; outline: none; }
-        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(200,153,58,0.12); }
-        .form-control::placeholder { color: var(--muted); }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 7px;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 11px 15px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-family: 'Sarabun', sans-serif;
+            background: #FDFBF7;
+            color: var(--text);
+            transition: 0.18s;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(200, 153, 58, 0.12);
+        }
+
+        .form-control::placeholder {
+            color: var(--muted);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
 
         /* Hub grid (homepage) */
-        .hub-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; }
-        .hub-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-lg); padding: 32px 24px; text-align: left; cursor: pointer; transition: all 0.22s; display: flex; flex-direction: column; gap: 12px; }
-        .hub-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--brown-300); }
-        .hub-icon { font-size: 2.2rem; }
-        .hub-title { font-size: 1.15rem; font-weight: 700; color: var(--text); }
-        .hub-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .hub-card {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px 24px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.22s;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .hub-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+            border-color: var(--brown-300);
+        }
+
+        .hub-icon {
+            font-size: 2.2rem;
+        }
+
+        .hub-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .hub-desc {
+            font-size: 0.88rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
 
         /* Accordion */
-        .accordion { border: 1.5px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 10px; overflow: hidden; }
-        .accordion-header { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; background: var(--brown-100); cursor: pointer; font-weight: 600; user-select: none; transition: 0.15s; }
-        .accordion-header:hover { background: var(--brown-200); }
-        .accordion-arrow { transition: transform 0.25s; font-size: 0.8rem; }
-        .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-        .accordion-body.open { max-height: 800px; }
-        .accordion-body-inner { padding: 16px; }
+        .accordion {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 16px;
+            background: var(--brown-100);
+            cursor: pointer;
+            font-weight: 600;
+            user-select: none;
+            transition: 0.15s;
+        }
+
+        .accordion-header:hover {
+            background: var(--brown-200);
+        }
+
+        .accordion-arrow {
+            transition: transform 0.25s;
+            font-size: 0.8rem;
+        }
+
+        .accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-body.open {
+            max-height: 800px;
+        }
+
+        .accordion-body-inner {
+            padding: 16px;
+        }
 
         /* Section divider */
-        .section-block { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin-bottom: 16px; }
-        .section-title { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-block {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
         /* Score list items */
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 12px; background: var(--card); transition: 0.18s; }
-        .list-item:hover { border-color: var(--brown-300); }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+            background: var(--card);
+            transition: 0.18s;
+        }
+
+        .list-item:hover {
+            border-color: var(--brown-300);
+        }
 
         /* Drag items (dream faculty) */
-        .drag-item { display: flex; align-items: center; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 10px; background: var(--card); cursor: grab; transition: 0.18s; gap: 12px; }
-        .drag-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
-        .drag-item.dragging { opacity: 0.5; border: 2px dashed var(--primary); background: var(--primary-light); }
-        .drag-handle { font-size: 1.3rem; color: var(--muted); cursor: grab; flex-shrink: 0; }
-        .drag-rank { font-family: 'Prompt', sans-serif; font-size: 1rem; font-weight: 700; color: var(--primary); width: 24px; text-align: center; flex-shrink: 0; }
+        .drag-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            background: var(--card);
+            cursor: grab;
+            transition: 0.18s;
+            gap: 12px;
+        }
+
+        .drag-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .drag-item.dragging {
+            opacity: 0.5;
+            border: 2px dashed var(--primary);
+            background: var(--primary-light);
+        }
+
+        .drag-handle {
+            font-size: 1.3rem;
+            color: var(--muted);
+            cursor: grab;
+            flex-shrink: 0;
+        }
+
+        .drag-rank {
+            font-family: 'Prompt', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
 
         /* Search results dropdown */
-        .search-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow); z-index: 50; max-height: 280px; overflow-y: auto; }
-        .search-result-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: 0.12s; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .search-result-item:hover { background: var(--primary-light); }
-        .search-result-item:last-child { border-bottom: none; }
-        .search-wrap { position: relative; }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            z-index: 50;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: 0.12s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-result-item:hover {
+            background: var(--primary-light);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-wrap {
+            position: relative;
+        }
 
         /* Table */
-        .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th,td { border: 1px solid var(--border); padding: 12px 14px; text-align: center; font-size: 0.9rem; }
-        th { background: var(--brown-100); font-family: 'Prompt', sans-serif; font-size: 0.85rem; position: sticky; top: 0; }
-        td:first-child { text-align: left; font-weight: 600; }
-        .predict-cell { background: var(--purple-bg); color: var(--purple); font-weight: 700; }
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--brown-100);
+            font-family: 'Prompt', sans-serif;
+            font-size: 0.85rem;
+            position: sticky;
+            top: 0;
+        }
+
+        td:first-child {
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .predict-cell {
+            background: var(--purple-bg);
+            color: var(--purple);
+            font-weight: 700;
+        }
 
         /* Risk indicator */
-        .risk-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-        .risk-badge { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 99px; font-size: 0.82rem; font-weight: 700; }
-        .risk-1 { background: #FEE2E2; color: var(--risk1); }
-        .risk-2 { background: #FEF3C7; color: var(--risk2); }
-        .risk-3 { background: #FFFBEB; color: #B45309; }
-        .risk-4 { background: #ECFDF5; color: #059669; }
-        .risk-5 { background: #D1FAE5; color: var(--risk5); }
+        .risk-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 12px;
+            border-radius: 99px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .risk-1 {
+            background: #FEE2E2;
+            color: var(--risk1);
+        }
+
+        .risk-2 {
+            background: #FEF3C7;
+            color: var(--risk2);
+        }
+
+        .risk-3 {
+            background: #FFFBEB;
+            color: #B45309;
+        }
+
+        .risk-4 {
+            background: #ECFDF5;
+            color: #059669;
+        }
+
+        .risk-5 {
+            background: #D1FAE5;
+            color: var(--risk5);
+        }
 
         /* Rank card */
-        .rank-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; background: var(--card); display: flex; gap: 16px; align-items: flex-start; transition: 0.18s; }
-        .rank-card:hover { box-shadow: var(--shadow); }
-        .rank-number { font-family: 'Prompt', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--brown-200); width: 48px; text-align: center; flex-shrink: 0; line-height: 1; }
-        .rank-body { flex: 1; }
-        .rank-scores { text-align: right; flex-shrink: 0; }
-        .score-big { font-size: 1.7rem; font-weight: 700; color: var(--primary); font-family: 'Prompt', sans-serif; }
-        .score-label { font-size: 0.78rem; color: var(--muted); }
-        .score-min { font-size: 0.85rem; color: var(--text); margin-top: 4px; }
-        .score-predict { font-size: 0.85rem; color: var(--purple); font-weight: 600; }
+        .rank-card {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 14px;
+            background: var(--card);
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            transition: 0.18s;
+        }
+
+        .rank-card:hover {
+            box-shadow: var(--shadow);
+        }
+
+        .rank-number {
+            font-family: 'Prompt', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--brown-200);
+            width: 48px;
+            text-align: center;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
+        .rank-body {
+            flex: 1;
+        }
+
+        .rank-scores {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .score-big {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'Prompt', sans-serif;
+        }
+
+        .score-label {
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        .score-min {
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-top: 4px;
+        }
+
+        .score-predict {
+            font-size: 0.85rem;
+            color: var(--purple);
+            font-weight: 600;
+        }
 
         /* Compare buttons (step 1) */
-        .faculty-group-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
-        .faculty-group-btn { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .faculty-group-btn:hover, .faculty-group-btn.active { border-color: var(--primary); background: var(--primary-light); }
-        .faculty-group-icon { font-size: 2rem; margin-bottom: 8px; }
+        .faculty-group-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .faculty-group-btn {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .faculty-group-btn:hover,
+        .faculty-group-btn.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .faculty-group-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
 
         /* Slider quiz */
-        .quiz-slider-wrap { margin: 10px 0 20px; }
-        .quiz-slider { width: 100%; accent-color: var(--primary); }
-        .slider-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+        .quiz-slider-wrap {
+            margin: 10px 0 20px;
+        }
+
+        .quiz-slider {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
 
         /* Popup / Modal */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; align-items: center; justify-content: center; }
-        .modal-overlay.show { display: flex; }
-        .modal-box { background: var(--card); border-radius: var(--radius-lg); padding: 36px; max-width: 440px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center; }
-        .modal-box h3 { margin-bottom: 14px; font-size: 1.2rem; }
-        .modal-box p { color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
-        .modal-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            padding: 36px;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .modal-box h3 {
+            margin-bottom: 14px;
+            font-size: 1.2rem;
+        }
+
+        .modal-box p {
+            color: var(--muted);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
 
         /* Empty state */
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
-        .empty-icon { font-size: 3rem; margin-bottom: 14px; }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 14px;
+        }
 
         /* Bar chart (subject focus) */
-        .bar-wrap { margin-bottom: 18px; }
-        .bar-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
-        .bar-track { height: 28px; background: var(--brown-100); border-radius: 99px; overflow: hidden; position: relative; }
-        .bar-current { height: 100%; border-radius: 99px; background: var(--primary); transition: width 0.6s ease; }
-        .bar-target { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger); }
+        .bar-wrap {
+            margin-bottom: 18px;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .bar-track {
+            height: 28px;
+            background: var(--brown-100);
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-current {
+            height: 100%;
+            border-radius: 99px;
+            background: var(--primary);
+            transition: width 0.6s ease;
+        }
+
+        .bar-target {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--danger);
+        }
 
         /* MBTI buttons */
-        .mbti-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; }
-        .mbti-btn { padding: 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-size: 0.95rem; background: var(--card); transition: 0.15s; text-align: center; }
-        .mbti-btn:hover, .mbti-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+        .mbti-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .mbti-btn {
+            padding: 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            background: var(--card);
+            transition: 0.15s;
+            text-align: center;
+        }
+
+        .mbti-btn:hover,
+        .mbti-btn.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
 
         /* AI loading */
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
 
         /* misc */
-        .divider { height: 1px; background: var(--border); margin: 20px 0; }
-        .text-muted { color: var(--muted); font-size: 0.9rem; }
-        .text-primary { color: var(--primary); }
-        .text-purple { color: var(--purple); }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; }
-        .badge-brown { background: var(--brown-100); color: var(--primary); }
-        .badge-purple { background: var(--purple-bg); color: var(--purple); }
-        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-        input[type=number] { -moz-appearance: textfield; }
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 20px 0;
+        }
+
+        .text-muted {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .text-primary {
+            color: var(--primary);
+        }
+
+        .text-purple {
+            color: var(--purple);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-brown {
+            background: var(--brown-100);
+            color: var(--primary);
+        }
+
+        .badge-purple {
+            background: var(--purple-bg);
+            color: var(--purple);
+        }
+
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 
 <body>
-<header class="navbar">
-    <div class="brand" onclick="nav('home')">Compass TCAS 🧭</div>
-    <div id="db-badge" class="db-badge">🔴 กำลังเชื่อมต่อ...</div>
-</header>
+    <header class="navbar">
+        <div class="brand" onclick="nav('home')">Compass TCAS 🧭</div>
+        <div id="db-badge" class="db-badge">🔴 กำลังเชื่อมต่อ...</div>
+    </header>
 
-<!-- ======= HOME ======= -->
-<div id="page-home" class="page active">
-<div class="container">
-    <div style="text-align:center; padding: 16px 0 28px;">
-        <h1 style="font-size:1.9rem; color:var(--text);">เลือกเครื่องมือที่ต้องการ</h1>
-        <p class="text-muted" style="margin-top:6px;">เพื่อนช่วยวางแผนเข้ามหาวิทยาลัยของน้อง ✦</p>
-    </div>
-    <div class="hub-grid">
-        <div class="hub-card" onclick="nav('scores-list')">
-            <div class="hub-icon">📊</div>
-            <div class="hub-title">ชุดคะแนน</div>
-            <div class="hub-desc">บันทึก GPAX, TGAT, TPAT, A-Level แยกเป็นชุดๆ</div>
-        </div>
-        <div class="hub-card" onclick="nav('dream-list')">
-            <div class="hub-icon">💛</div>
-            <div class="hub-title">คณะในดวงใจ</div>
-            <div class="hub-desc">จัดอันดับ 10 คณะเป้าหมาย ลากสลับได้</div>
-        </div>
-        <div class="hub-card" onclick="nav('compare-step1')">
-            <div class="hub-icon">📋</div>
-            <div class="hub-title">ตารางเปรียบเทียบเกณฑ์</div>
-            <div class="hub-desc">ดูน้ำหนักคะแนนและ Min ปีเก่า-ทำนาย</div>
-        </div>
-        <div class="hub-card" onclick="nav('rank-select')">
-            <div class="hub-icon">🎯</div>
-            <div class="hub-title">ทดลองจัดอันดับ</div>
-            <div class="hub-desc">จำลองโอกาสติดพร้อม Risk indicator 5 สี</div>
-        </div>
-        <div class="hub-card" onclick="nav('recommend-path')">
-            <div class="hub-icon">✨</div>
-            <div class="hub-title">แนะนำคณะ</div>
-            <div class="hub-desc">MBTI หรือ Lifestyle Quiz พร้อม AI วิเคราะห์</div>
-        </div>
-        <div class="hub-card" onclick="nav('focus-select')">
-            <div class="hub-icon">📚</div>
-            <div class="hub-title">วิชาที่ควรโฟกัส</div>
-            <div class="hub-desc">วิเคราะห์ช่องว่างคะแนนรายวิชา</div>
-        </div>
-    </div>
-</div></div>
-
-<!-- ======= SCORES: LIST ======= -->
-<div id="page-scores-list" class="page"><div class="container">
-    <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
-    <h2 style="margin-bottom:20px;">📊 ชุดคะแนนของฉัน</h2>
-    <button class="btn btn-primary btn-block btn-lg" onclick="nav('scores-new')" style="margin-bottom:24px;">+ เพิ่มชุดคะแนนใหม่</button>
-    <div id="score-list"></div>
-</div></div>
-
-<!-- ======= SCORES: NEW (ตั้งชื่อ) ======= -->
-<div id="page-scores-new" class="page"><div class="container" style="max-width:500px;">
-    <button class="btn-back" onclick="nav('scores-list')">← กลับ</button>
-    <div style="text-align:center; padding: 24px 0 32px;">
-        <div style="font-size:4rem; margin-bottom:16px;">🏷️</div>
-        <h2 style="margin-bottom:8px;">สร้างชุดคะแนนใหม่</h2>
-        <p class="text-muted">ตั้งชื่อที่จำง่าย เช่น "คะแนนจริง 68"</p>
-    </div>
-    <div class="form-group">
-        <input type="text" id="score-name-input" class="form-control" placeholder="ชื่อชุดคะแนน..." style="font-size:1.15rem; padding:16px; text-align:center;">
-    </div>
-    <button class="btn btn-primary btn-block btn-lg" onclick="scoreApp.startInput()">เริ่มบันทึกคะแนน →</button>
-</div></div>
-
-<!-- ======= SCORES: INPUT ======= -->
-<div id="page-scores-input" class="page"><div class="container">
-    <button class="btn-back" id="score-input-back-btn">← กลับ</button>
-    <h2 id="score-input-title" style="margin-bottom:24px;"></h2>
-
-    <!-- ส่วน 1: GPAX -->
-    <div class="section-block">
-        <div class="section-title">📌 เกรดเฉลี่ยสะสม</div>
-        <div style="max-width:200px;">
-            <label class="form-label">GPAX</label>
-            <input type="number" id="s-gpax" class="form-control" placeholder="0.00" min="0" max="4" step="0.01">
-        </div>
-    </div>
-
-    <!-- ส่วน 2: เกรดรายวิชา Accordion -->
-    <div class="section-block">
-        <div class="section-title">📚 เกรดรายวิชา (Accordion)</div>
-        <div class="accordion">
-            <div class="accordion-header" onclick="toggleAccordion('acc-grades')">
-                <span>เกรดและหน่วยกิตแยกกลุ่มสาระ</span>
-                <span class="accordion-arrow" id="arr-acc-grades">▼</span>
+    <!-- ======= HOME ======= -->
+    <div id="page-home" class="page active">
+        <div class="container">
+            <div style="text-align:center; padding: 16px 0 28px;">
+                <h1 style="font-size:1.9rem; color:var(--text);">เลือกเครื่องมือที่ต้องการ</h1>
+                <p class="text-muted" style="margin-top:6px;">เพื่อนช่วยวางแผนเข้ามหาวิทยาลัยของน้อง ✦</p>
             </div>
-            <div class="accordion-body" id="acc-grades">
-                <div class="accordion-body-inner">
-                    <div class="grid-3">
-                        <div class="form-group"><label class="form-label">GPA คณิต</label><input type="number" id="s-gpa-math" class="form-control" placeholder="0.00" min="0" max="4" step="0.01"></div>
-                        <div class="form-group"><label class="form-label">GPA วิทย์</label><input type="number" id="s-gpa-sci" class="form-control" placeholder="0.00" min="0" max="4" step="0.01"></div>
-                        <div class="form-group"><label class="form-label">GPA ภาษา</label><input type="number" id="s-gpa-lang" class="form-control" placeholder="0.00" min="0" max="4" step="0.01"></div>
-                        <div class="form-group"><label class="form-label">GPA สังคม</label><input type="number" id="s-gpa-soc" class="form-control" placeholder="0.00" min="0" max="4" step="0.01"></div>
-                        <div class="form-group"><label class="form-label">GPA ศิลปะ</label><input type="number" id="s-gpa-art" class="form-control" placeholder="0.00" min="0" max="4" step="0.01"></div>
-                        <div class="form-group"><label class="form-label">GPA สุขศึกษา</label><input type="number" id="s-gpa-pe" class="form-control" placeholder="0.00" min="0" max="4" step="0.01"></div>
+            <div class="hub-grid">
+                <div class="hub-card" onclick="nav('scores-list')">
+                    <div class="hub-icon">📊</div>
+                    <div class="hub-title">ชุดคะแนน</div>
+                    <div class="hub-desc">บันทึก GPAX, TGAT, TPAT, A-Level แยกเป็นชุดๆ</div>
+                </div>
+                <div class="hub-card" onclick="nav('dream-list')">
+                    <div class="hub-icon">💛</div>
+                    <div class="hub-title">คณะในดวงใจ</div>
+                    <div class="hub-desc">จัดอันดับ 10 คณะเป้าหมาย ลากสลับได้</div>
+                </div>
+                <div class="hub-card" onclick="nav('compare-step1')">
+                    <div class="hub-icon">📋</div>
+                    <div class="hub-title">ตารางเปรียบเทียบเกณฑ์</div>
+                    <div class="hub-desc">ดูน้ำหนักคะแนนและ Min ปีเก่า-ทำนาย</div>
+                </div>
+                <div class="hub-card" onclick="nav('rank-select')">
+                    <div class="hub-icon">🎯</div>
+                    <div class="hub-title">ทดลองจัดอันดับ</div>
+                    <div class="hub-desc">จำลองโอกาสติดพร้อม Risk indicator 5 สี</div>
+                </div>
+                <div class="hub-card" onclick="nav('recommend-path')">
+                    <div class="hub-icon">✨</div>
+                    <div class="hub-title">แนะนำคณะ</div>
+                    <div class="hub-desc">MBTI หรือ Lifestyle Quiz พร้อม AI วิเคราะห์</div>
+                </div>
+                <div class="hub-card" id="hub-focus-card" onclick="nav('focus-select')" style="display:none;">
+                    <div class="hub-icon">📚</div>
+                    <div class="hub-title">วิชาที่ควรโฟกัส</div>
+                    <div class="hub-desc">วิเคราะห์ช่องว่างคะแนนรายวิชา</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======= SCORES: LIST ======= -->
+    <div id="page-scores-list" class="page">
+        <div class="container">
+            <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
+            <h2 style="margin-bottom:20px;">📊 ชุดคะแนนของฉัน</h2>
+            <button class="btn btn-primary btn-block btn-lg" onclick="nav('scores-new')" style="margin-bottom:24px;">+
+                เพิ่มชุดคะแนนใหม่</button>
+            <div id="score-list"></div>
+        </div>
+    </div>
+
+    <!-- ======= SCORES: NEW (ตั้งชื่อ) ======= -->
+    <div id="page-scores-new" class="page">
+        <div class="container" style="max-width:500px;">
+            <button class="btn-back" onclick="nav('scores-list')">← กลับ</button>
+            <div style="text-align:center; padding: 24px 0 32px;">
+                <div style="font-size:4rem; margin-bottom:16px;">🏷️</div>
+                <h2 style="margin-bottom:8px;">สร้างชุดคะแนนใหม่</h2>
+                <p class="text-muted">ตั้งชื่อที่จำง่าย เช่น "คะแนนจริง 68"</p>
+            </div>
+            <div class="form-group">
+                <input type="text" id="score-name-input" class="form-control" placeholder="ชื่อชุดคะแนน..."
+                    style="font-size:1.15rem; padding:16px; text-align:center;">
+            </div>
+            <button class="btn btn-primary btn-block btn-lg" onclick="scoreApp.startInput()">เริ่มบันทึกคะแนน →</button>
+        </div>
+    </div>
+
+    <!-- ======= SCORES: INPUT ======= -->
+    <div id="page-scores-input" class="page">
+        <div class="container">
+            <button class="btn-back" id="score-input-back-btn">← กลับ</button>
+            <h2 id="score-input-title" style="margin-bottom:24px;"></h2>
+
+            <!-- ส่วน 1: GPAX -->
+            <div class="section-block">
+                <div class="section-title">📌 เกรดเฉลี่ยสะสม</div>
+                <div style="max-width:200px;">
+                    <label class="form-label">GPAX</label>
+                    <input type="number" id="s-gpax" class="form-control" placeholder="0.00" min="0" max="4"
+                        step="0.01">
+                </div>
+            </div>
+
+            <!-- ส่วน 2: เกรดรายวิชา Accordion -->
+            <div class="section-block">
+                <div class="section-title">📚 เกรดรายวิชา (Accordion)</div>
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion('acc-grades')">
+                        <span>เกรดและหน่วยกิตแยกกลุ่มสาระ</span>
+                        <span class="accordion-arrow" id="arr-acc-grades">▼</span>
+                    </div>
+                    <div class="accordion-body" id="acc-grades">
+                        <div class="accordion-body-inner">
+                            <div class="grid-3">
+                                <div class="form-group"><label class="form-label">GPA คณิต</label><input type="number"
+                                        id="s-gpa-math" class="form-control" placeholder="0.00" min="0" max="4"
+                                        step="0.01"></div>
+                                <div class="form-group"><label class="form-label">GPA วิทย์</label><input type="number"
+                                        id="s-gpa-sci" class="form-control" placeholder="0.00" min="0" max="4"
+                                        step="0.01"></div>
+                                <div class="form-group"><label class="form-label">GPA ภาษา</label><input type="number"
+                                        id="s-gpa-lang" class="form-control" placeholder="0.00" min="0" max="4"
+                                        step="0.01"></div>
+                                <div class="form-group"><label class="form-label">GPA สังคม</label><input type="number"
+                                        id="s-gpa-soc" class="form-control" placeholder="0.00" min="0" max="4"
+                                        step="0.01"></div>
+                                <div class="form-group"><label class="form-label">GPA ศิลปะ</label><input type="number"
+                                        id="s-gpa-art" class="form-control" placeholder="0.00" min="0" max="4"
+                                        step="0.01"></div>
+                                <div class="form-group"><label class="form-label">GPA สุขศึกษา</label><input
+                                        type="number" id="s-gpa-pe" class="form-control" placeholder="0.00" min="0"
+                                        max="4" step="0.01"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- ส่วน 3: TGAT -->
-    <div class="section-block">
-        <div class="section-title">🧠 TGAT (คะแนนเต็ม 100 ต่อพาร์ท)</div>
-        <div class="grid-3">
-            <div class="form-group"><label class="form-label">TGAT1 (การสื่อสาร)</label><input type="number" id="s-tgat1" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">TGAT2 (คิดวิเคราะห์)</label><input type="number" id="s-tgat2" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">TGAT3 (สมรรถนะ)</label><input type="number" id="s-tgat3" class="form-control" placeholder="0" min="0" max="100"></div>
-        </div>
-    </div>
-
-    <!-- ส่วน 4: TPAT -->
-    <div class="section-block">
-        <div class="section-title">🔬 TPAT</div>
-        <div class="grid-2" style="margin-bottom:12px;">
-            <div class="form-group"><label class="form-label">TPAT1 (กสพท)</label><input type="number" id="s-tpat1" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">TPAT3 (วิศวะ/วิทย์)</label><input type="number" id="s-tpat3" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">TPAT4 (สถาปัตย์)</label><input type="number" id="s-tpat4" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">TPAT5 (ครู)</label><input type="number" id="s-tpat5" class="form-control" placeholder="0" min="0" max="100"></div>
-        </div>
-        <div class="accordion">
-            <div class="accordion-header" onclick="toggleAccordion('acc-tpat2')">
-                <span>TPAT2 (ศิลปะ ดนตรี นาฏศิลป์)</span>
-                <span class="accordion-arrow" id="arr-acc-tpat2">▼</span>
+            <!-- ส่วน 3: TGAT -->
+            <div class="section-block">
+                <div class="section-title">🧠 TGAT (คะแนนเต็ม 100 ต่อพาร์ท)</div>
+                <div class="grid-3">
+                    <div class="form-group"><label class="form-label">TGAT1 (การสื่อสาร)</label><input type="number"
+                            id="s-tgat1" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">TGAT2 (คิดวิเคราะห์)</label><input type="number"
+                            id="s-tgat2" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">TGAT3 (สมรรถนะ)</label><input type="number"
+                            id="s-tgat3" class="form-control" placeholder="0" min="0" max="100"></div>
+                </div>
             </div>
-            <div class="accordion-body" id="acc-tpat2">
-                <div class="accordion-body-inner grid-3">
-                    <div class="form-group"><label class="form-label">TPAT21 (ทัศนศิลป์)</label><input type="number" id="s-tpat21" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">TPAT22 (ดนตรี)</label><input type="number" id="s-tpat22" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">TPAT23 (นาฏศิลป์)</label><input type="number" id="s-tpat23" class="form-control" placeholder="0" min="0" max="100"></div>
+
+            <!-- ส่วน 4: TPAT -->
+            <div class="section-block">
+                <div class="section-title">🔬 TPAT</div>
+                <div class="grid-2" style="margin-bottom:12px;">
+                    <div class="form-group"><label class="form-label">TPAT1 (กสพท)</label><input type="number"
+                            id="s-tpat1" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">TPAT3 (วิศวะ/วิทย์)</label><input type="number"
+                            id="s-tpat3" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">TPAT4 (สถาปัตย์)</label><input type="number"
+                            id="s-tpat4" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">TPAT5 (ครู)</label><input type="number"
+                            id="s-tpat5" class="form-control" placeholder="0" min="0" max="100"></div>
+                </div>
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion('acc-tpat2')">
+                        <span>TPAT2 (ศิลปะ ดนตรี นาฏศิลป์)</span>
+                        <span class="accordion-arrow" id="arr-acc-tpat2">▼</span>
+                    </div>
+                    <div class="accordion-body" id="acc-tpat2">
+                        <div class="accordion-body-inner grid-3">
+                            <div class="form-group"><label class="form-label">TPAT21 (ทัศนศิลป์)</label><input
+                                    type="number" id="s-tpat21" class="form-control" placeholder="0" min="0" max="100">
+                            </div>
+                            <div class="form-group"><label class="form-label">TPAT22 (ดนตรี)</label><input type="number"
+                                    id="s-tpat22" class="form-control" placeholder="0" min="0" max="100"></div>
+                            <div class="form-group"><label class="form-label">TPAT23 (นาฏศิลป์)</label><input
+                                    type="number" id="s-tpat23" class="form-control" placeholder="0" min="0" max="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ส่วน 5: A-Level -->
+            <div class="section-block">
+                <div class="section-title">📝 A-Level (คะแนนเต็ม 100)</div>
+                <div class="grid-3" style="margin-bottom:12px;">
+                    <div class="form-group"><label class="form-label">คณิต 1 (61)</label><input type="number"
+                            id="s-alv61" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">คณิต 2 (62)</label><input type="number"
+                            id="s-alv62" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">วิทย์ประยุกต์ (63)</label><input type="number"
+                            id="s-alv63" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">ฟิสิกส์ (64)</label><input type="number"
+                            id="s-alv64" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">เคมี (65)</label><input type="number" id="s-alv65"
+                            class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">ชีวะ (66)</label><input type="number" id="s-alv66"
+                            class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">สังคม (70)</label><input type="number"
+                            id="s-alv70" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">ภาษาไทย (81)</label><input type="number"
+                            id="s-alv81" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">อังกฤษ (82)</label><input type="number"
+                            id="s-alv82" class="form-control" placeholder="0" min="0" max="100"></div>
+                </div>
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion('acc-lang3')">
+                        <span>ภาษาที่ 3</span>
+                        <span class="accordion-arrow" id="arr-acc-lang3">▼</span>
+                    </div>
+                    <div class="accordion-body" id="acc-lang3">
+                        <div class="accordion-body-inner grid-3">
+                            <div class="form-group"><label class="form-label">ฝรั่งเศส (83)</label><input type="number"
+                                    id="s-alv83" class="form-control" placeholder="0" min="0" max="100"></div>
+                            <div class="form-group"><label class="form-label">เยอรมัน (84)</label><input type="number"
+                                    id="s-alv84" class="form-control" placeholder="0" min="0" max="100"></div>
+                            <div class="form-group"><label class="form-label">ญี่ปุ่น (85)</label><input type="number"
+                                    id="s-alv85" class="form-control" placeholder="0" min="0" max="100"></div>
+                            <div class="form-group"><label class="form-label">เกาหลี (86)</label><input type="number"
+                                    id="s-alv86" class="form-control" placeholder="0" min="0" max="100"></div>
+                            <div class="form-group"><label class="form-label">จีน (87)</label><input type="number"
+                                    id="s-alv87" class="form-control" placeholder="0" min="0" max="100"></div>
+                            <div class="form-group"><label class="form-label">บาลี (88)</label><input type="number"
+                                    id="s-alv88" class="form-control" placeholder="0" min="0" max="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-block btn-lg" onclick="scoreApp.save()" style="margin-top:8px;">💾
+                บันทึกคะแนน</button>
+        </div>
+    </div>
+
+    <!-- ======= DREAM: LIST ======= -->
+    <div id="page-dream-list" class="page">
+        <div class="container">
+            <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
+            <h2 style="margin-bottom:20px;">💛 คณะในดวงใจ</h2>
+            <button class="btn btn-primary btn-block btn-lg" onclick="nav('dream-new')" style="margin-bottom:24px;">+
+                เพิ่มชุดคณะในดวงใจ</button>
+            <div id="dream-list"></div>
+        </div>
+    </div>
+
+    <!-- ======= DREAM: NEW ======= -->
+    <div id="page-dream-new" class="page">
+        <div class="container" style="max-width:500px;">
+            <button class="btn-back" onclick="nav('dream-list')">← กลับ</button>
+            <div style="text-align:center; padding:24px 0 32px;">
+                <div style="font-size:4rem; margin-bottom:16px;">💛</div>
+                <h2 style="margin-bottom:8px;">สร้างชุดคณะในดวงใจ</h2>
+                <p class="text-muted">เช่น "ชุดวิศวะรวม", "ชุดแพทย์"</p>
+            </div>
+            <div class="form-group">
+                <input type="text" id="dream-name-input" class="form-control" placeholder="ชื่อชุดคณะ..."
+                    style="font-size:1.15rem; padding:16px; text-align:center;">
+            </div>
+            <button class="btn btn-primary btn-block btn-lg" onclick="dreamApp.startManage()">เริ่มจัดอันดับ →</button>
+        </div>
+    </div>
+
+    <!-- ======= DREAM: MANAGE ======= -->
+    <div id="page-dream-manage" class="page">
+        <div class="container">
+            <button class="btn-back" onclick="nav('dream-list')">← กลับ</button>
+            <h2 id="dream-manage-title" style="margin-bottom:4px;"></h2>
+            <p class="text-muted" style="margin-bottom:20px;">สูงสุด 10 คณะ • ลากไอคอน ☰ เพื่อสลับอันดับ</p>
+
+            <div class="search-wrap" style="margin-bottom:20px;">
+                <input type="text" id="dream-search" class="form-control"
+                    placeholder="🔍 ค้นหาชื่อคณะ หรือมหาวิทยาลัย..." oninput="dreamApp.search()"
+                    style="padding:14px 16px; font-size:1rem;">
+                <div id="dream-search-results" class="search-results" style="display:none;"></div>
+            </div>
+
+            <div id="dream-slots"></div>
+        </div>
+    </div>
+
+    <!-- ======= COMPARE: STEP 1 ======= -->
+    <div id="page-compare-step1" class="page">
+        <div class="container">
+            <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
+            <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
+            <p class="text-muted" style="margin-bottom:8px;">ขั้นตอน 1/3 — เลือกกลุ่มคณะ</p>
+            <div class="faculty-group-grid" id="compare-groups"></div>
+        </div>
+    </div>
+
+    <!-- ======= COMPARE: STEP 2 ======= -->
+    <div id="page-compare-step2" class="page">
+        <div class="container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <button class="btn-back" style="margin:0;" onclick="nav('compare-step1')">← กลับ</button>
+                <button class="btn-back" style="margin:0;" onclick="nav('home')">🏠 หน้าหลัก</button>
+            </div>
+            <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
+            <p class="text-muted" style="margin-bottom:16px;">ขั้นตอน 2/3 — เลือกสาขา</p>
+            <div id="compare-majors" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
+        </div>
+    </div>
+
+    <!-- ======= COMPARE: STEP 3 ======= -->
+    <div id="page-compare-step3" class="page">
+        <div class="container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <button class="btn-back" style="margin:0;" onclick="nav('compare-step1')">← เปลี่ยนกลุ่ม</button>
+                <button class="btn-back" style="margin:0;" onclick="nav('home')">🏠 หน้าหลัก</button>
+            </div>
+            <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
+            <p class="text-muted" style="margin-bottom:16px;">ขั้นตอน 3/3 — เลือกหลักสูตรที่สนใจ</p>
+            <div id="compare-unis"></div>
+            <div style="margin-top:24px; display:flex; gap:12px;">
+                <button class="btn btn-outline btn-lg" style="flex:1;" onclick="compareApp.addMoreMajor()">+
+                    เพิ่มสาขาอื่น</button>
+                <button class="btn btn-primary btn-lg" style="flex:2;"
+                    onclick="compareApp.buildTable()">สร้างตารางเปรียบเทียบ →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======= COMPARE: TABLE ======= -->
+    <div id="page-compare-table" class="page">
+        <div class="container" style="max-width:1100px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <button class="btn-back" style="margin:0;" onclick="nav('compare-step3')">← กลับ</button>
+                <button class="btn btn-outline btn-sm" onclick="window.print()">📥 Save PDF</button>
+            </div>
+            <div class="table-wrap">
+                <table id="compare-table">
+                    <thead id="compare-table-head"></thead>
+                    <tbody id="compare-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======= RANK: SELECT ======= -->
+    <div id="page-rank-select" class="page">
+        <div class="container" style="max-width:540px;">
+            <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
+            <h2 style="margin-bottom:24px;">🎯 ทดลองจัดอันดับ</h2>
+            <div class="section-block">
+                <div class="form-group">
+                    <label class="form-label">เลือกชุดคะแนน</label>
+                    <select id="rank-score-sel" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">เลือกชุดคณะในดวงใจ</label>
+                    <select id="rank-dream-sel" class="form-control"></select>
+                </div>
+                <button class="btn btn-primary btn-block btn-lg" onclick="rankApp.analyze()"
+                    style="margin-top:8px;">ถัดไป →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======= RANK: RESULT ======= -->
+    <div id="page-rank-result" class="page">
+        <div class="container">
+            <button class="btn-back" onclick="nav('rank-select')">← กลับ</button>
+            <h2 style="margin-bottom:6px;">🎯 ผลการจัดอันดับ</h2>
+            <p class="text-muted" style="margin-bottom:20px;">ลากไอคอน ☰ เพื่อสลับอันดับได้</p>
+            <div id="rank-cards"></div>
+            <div style="margin-top:24px; text-align:center;">
+                <button class="btn btn-primary btn-lg" onclick="rankApp.openAI()">💡 แนะนำการจัดอันดับ (AI)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======= RECOMMEND: PATH ======= -->
+    <div id="page-recommend-path" class="page">
+        <div class="container" style="max-width:600px;">
+            <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
+            <h2 style="margin-bottom:8px; text-align:center;">✨ แนะนำคณะที่ใช่สำหรับคุณ</h2>
+            <p class="text-muted" style="text-align:center; margin-bottom:32px;">เลือกวิธีที่ต้องการ</p>
+            <div style="display:grid; gap:16px;">
+                <div class="card card-hover" onclick="nav('recommend-mbti')" style="padding:28px; text-align:center;">
+                    <div style="font-size:2.5rem; margin-bottom:12px;">🧬</div>
+                    <h3>แนะนำตาม MBTI</h3>
+                    <p class="text-muted" style="margin-top:6px;">เลือก Type บุคลิกภาพ 16 แบบ</p>
+                </div>
+                <div class="card card-hover" onclick="recommendApp.startQuiz()"
+                    style="padding:28px; text-align:center;">
+                    <div style="font-size:2.5rem; margin-bottom:12px;">🎮</div>
+                    <h3>ตอบแบบสอบถาม Lifestyle</h3>
+                    <p class="text-muted" style="margin-top:6px;">10 คำถาม Slider โค้งมน</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ส่วน 5: A-Level -->
-    <div class="section-block">
-        <div class="section-title">📝 A-Level (คะแนนเต็ม 100)</div>
-        <div class="grid-3" style="margin-bottom:12px;">
-            <div class="form-group"><label class="form-label">คณิต 1 (61)</label><input type="number" id="s-alv61" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">คณิต 2 (62)</label><input type="number" id="s-alv62" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">วิทย์ประยุกต์ (63)</label><input type="number" id="s-alv63" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">ฟิสิกส์ (64)</label><input type="number" id="s-alv64" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">เคมี (65)</label><input type="number" id="s-alv65" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">ชีวะ (66)</label><input type="number" id="s-alv66" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">สังคม (70)</label><input type="number" id="s-alv70" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">ภาษาไทย (81)</label><input type="number" id="s-alv81" class="form-control" placeholder="0" min="0" max="100"></div>
-            <div class="form-group"><label class="form-label">อังกฤษ (82)</label><input type="number" id="s-alv82" class="form-control" placeholder="0" min="0" max="100"></div>
-        </div>
-        <div class="accordion">
-            <div class="accordion-header" onclick="toggleAccordion('acc-lang3')">
-                <span>ภาษาที่ 3</span>
-                <span class="accordion-arrow" id="arr-acc-lang3">▼</span>
-            </div>
-            <div class="accordion-body" id="acc-lang3">
-                <div class="accordion-body-inner grid-3">
-                    <div class="form-group"><label class="form-label">ฝรั่งเศส (83)</label><input type="number" id="s-alv83" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">เยอรมัน (84)</label><input type="number" id="s-alv84" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">ญี่ปุ่น (85)</label><input type="number" id="s-alv85" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">เกาหลี (86)</label><input type="number" id="s-alv86" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">จีน (87)</label><input type="number" id="s-alv87" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">บาลี (88)</label><input type="number" id="s-alv88" class="form-control" placeholder="0" min="0" max="100"></div>
+    <!-- ======= RECOMMEND: MBTI ======= -->
+    <div id="page-recommend-mbti" class="page">
+        <div class="container" style="max-width:600px;">
+            <button class="btn-back" onclick="nav('recommend-path')">← กลับ</button>
+            <h2 style="margin-bottom:20px;">🧬 เลือก MBTI Type</h2>
+            <div class="mbti-grid" id="mbti-grid"></div>
+            <div style="margin-top:24px;" id="mbti-score-wrap">
+                <div class="form-group">
+                    <label class="form-label" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="mbti-use-score"> นำชุดคะแนนมาวิเคราะห์ด้วย
+                    </label>
+                    <select id="mbti-score-sel" class="form-control" style="margin-top:8px;"></select>
                 </div>
+                <button class="btn btn-primary btn-block btn-lg" id="mbti-submit-btn" disabled
+                    onclick="recommendApp.processMBTI()">ดูคณะแนะนำ →</button>
             </div>
         </div>
     </div>
 
-    <button class="btn btn-primary btn-block btn-lg" onclick="scoreApp.save()" style="margin-top:8px;">💾 บันทึกคะแนน</button>
-</div></div>
-
-<!-- ======= DREAM: LIST ======= -->
-<div id="page-dream-list" class="page"><div class="container">
-    <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
-    <h2 style="margin-bottom:20px;">💛 คณะในดวงใจ</h2>
-    <button class="btn btn-primary btn-block btn-lg" onclick="nav('dream-new')" style="margin-bottom:24px;">+ เพิ่มชุดคณะในดวงใจ</button>
-    <div id="dream-list"></div>
-</div></div>
-
-<!-- ======= DREAM: NEW ======= -->
-<div id="page-dream-new" class="page"><div class="container" style="max-width:500px;">
-    <button class="btn-back" onclick="nav('dream-list')">← กลับ</button>
-    <div style="text-align:center; padding:24px 0 32px;">
-        <div style="font-size:4rem; margin-bottom:16px;">💛</div>
-        <h2 style="margin-bottom:8px;">สร้างชุดคณะในดวงใจ</h2>
-        <p class="text-muted">เช่น "ชุดวิศวะรวม", "ชุดแพทย์"</p>
-    </div>
-    <div class="form-group">
-        <input type="text" id="dream-name-input" class="form-control" placeholder="ชื่อชุดคณะ..." style="font-size:1.15rem; padding:16px; text-align:center;">
-    </div>
-    <button class="btn btn-primary btn-block btn-lg" onclick="dreamApp.startManage()">เริ่มจัดอันดับ →</button>
-</div></div>
-
-<!-- ======= DREAM: MANAGE ======= -->
-<div id="page-dream-manage" class="page"><div class="container">
-    <button class="btn-back" onclick="nav('dream-list')">← กลับ</button>
-    <h2 id="dream-manage-title" style="margin-bottom:4px;"></h2>
-    <p class="text-muted" style="margin-bottom:20px;">สูงสุด 10 คณะ • ลากไอคอน ☰ เพื่อสลับอันดับ</p>
-
-    <div class="search-wrap" style="margin-bottom:20px;">
-        <input type="text" id="dream-search" class="form-control" placeholder="🔍 ค้นหาชื่อคณะ หรือมหาวิทยาลัย..." oninput="dreamApp.search()" style="padding:14px 16px; font-size:1rem;">
-        <div id="dream-search-results" class="search-results" style="display:none;"></div>
-    </div>
-
-    <div id="dream-slots"></div>
-</div></div>
-
-<!-- ======= COMPARE: STEP 1 ======= -->
-<div id="page-compare-step1" class="page"><div class="container">
-    <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
-    <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
-    <p class="text-muted" style="margin-bottom:8px;">ขั้นตอน 1/3 — เลือกกลุ่มคณะ</p>
-    <div class="faculty-group-grid" id="compare-groups"></div>
-</div></div>
-
-<!-- ======= COMPARE: STEP 2 ======= -->
-<div id="page-compare-step2" class="page">
-    <div class="container">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <button class="btn-back" style="margin:0;" onclick="nav('compare-step1')">← กลับ</button>
-            <button class="btn-back" style="margin:0;" onclick="nav('home')">🏠 หน้าหลัก</button>
-        </div>
-        <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
-        <p class="text-muted" style="margin-bottom:16px;">ขั้นตอน 2/3 — เลือกสาขา</p>
-        <div id="compare-majors" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
-    </div>
-</div>
-
-<!-- ======= COMPARE: STEP 3 ======= -->
-<div id="page-compare-step3" class="page">
-    <div class="container">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-            <button class="btn-back" style="margin:0;" onclick="nav('compare-step1')">← เปลี่ยนกลุ่ม</button>
-            <button class="btn-back" style="margin:0;" onclick="nav('home')">🏠 หน้าหลัก</button>
-        </div>
-        <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
-        <p class="text-muted" style="margin-bottom:16px;">ขั้นตอน 3/3 — เลือกหลักสูตรที่สนใจ</p>
-        <div id="compare-unis"></div>
-        <div style="margin-top:24px; display:flex; gap:12px;">
-            <button class="btn btn-outline btn-lg" style="flex:1;" onclick="compareApp.addMoreMajor()">+
-                เพิ่มสาขาอื่น</button>
-            <button class="btn btn-primary btn-lg" style="flex:2;"
-                onclick="compareApp.buildTable()">สร้างตารางเปรียบเทียบ →</button>
+    <!-- ======= RECOMMEND: QUIZ ======= -->
+    <div id="page-recommend-quiz" class="page">
+        <div class="container" style="max-width:600px;">
+            <button class="btn-back" onclick="nav('recommend-path')">← กลับ</button>
+            <div id="quiz-progress" style="margin-bottom:20px;"></div>
+            <h3 id="quiz-question" style="margin-bottom:24px; line-height:1.6;"></h3>
+            <div id="quiz-input"></div>
         </div>
     </div>
-</div>
 
-<!-- ======= COMPARE: TABLE ======= -->
-<div id="page-compare-table" class="page"><div class="container" style="max-width:1100px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <button class="btn-back" style="margin:0;" onclick="nav('compare-step3')">← กลับ</button>
-        <button class="btn btn-outline btn-sm" onclick="window.print()">📥 Save PDF</button>
-    </div>
-    <div class="table-wrap">
-        <table id="compare-table">
-            <thead id="compare-table-head"></thead>
-            <tbody id="compare-table-body"></tbody>
-        </table>
-    </div>
-</div></div>
-
-<!-- ======= RANK: SELECT ======= -->
-<div id="page-rank-select" class="page"><div class="container" style="max-width:540px;">
-    <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
-    <h2 style="margin-bottom:24px;">🎯 ทดลองจัดอันดับ</h2>
-    <div class="section-block">
-        <div class="form-group">
-            <label class="form-label">เลือกชุดคะแนน</label>
-            <select id="rank-score-sel" class="form-control"></select>
-        </div>
-        <div class="form-group">
-            <label class="form-label">เลือกชุดคณะในดวงใจ</label>
-            <select id="rank-dream-sel" class="form-control"></select>
-        </div>
-        <button class="btn btn-primary btn-block btn-lg" onclick="rankApp.analyze()" style="margin-top:8px;">ถัดไป →</button>
-    </div>
-</div></div>
-
-<!-- ======= RANK: RESULT ======= -->
-<div id="page-rank-result" class="page"><div class="container">
-    <button class="btn-back" onclick="nav('rank-select')">← กลับ</button>
-    <h2 style="margin-bottom:6px;">🎯 ผลการจัดอันดับ</h2>
-    <p class="text-muted" style="margin-bottom:20px;">ลากไอคอน ☰ เพื่อสลับอันดับได้</p>
-    <div id="rank-cards"></div>
-    <div style="margin-top:24px; text-align:center;">
-        <button class="btn btn-primary btn-lg" onclick="rankApp.openAI()">💡 แนะนำการจัดอันดับ (AI)</button>
-    </div>
-</div></div>
-
-<!-- ======= RECOMMEND: PATH ======= -->
-<div id="page-recommend-path" class="page"><div class="container" style="max-width:600px;">
-    <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
-    <h2 style="margin-bottom:8px; text-align:center;">✨ แนะนำคณะที่ใช่สำหรับคุณ</h2>
-    <p class="text-muted" style="text-align:center; margin-bottom:32px;">เลือกวิธีที่ต้องการ</p>
-    <div style="display:grid; gap:16px;">
-        <div class="card card-hover" onclick="nav('recommend-mbti')" style="padding:28px; text-align:center;">
-            <div style="font-size:2.5rem; margin-bottom:12px;">🧬</div>
-            <h3>แนะนำตาม MBTI</h3>
-            <p class="text-muted" style="margin-top:6px;">เลือก Type บุคลิกภาพ 16 แบบ</p>
-        </div>
-        <div class="card card-hover" onclick="recommendApp.startQuiz()" style="padding:28px; text-align:center;">
-            <div style="font-size:2.5rem; margin-bottom:12px;">🎮</div>
-            <h3>ตอบแบบสอบถาม Lifestyle</h3>
-            <p class="text-muted" style="margin-top:6px;">10 คำถาม Slider โค้งมน</p>
+    <!-- ======= RECOMMEND: RESULT ======= -->
+    <div id="page-recommend-result" class="page">
+        <div class="container">
+            <button class="btn-back" onclick="nav('recommend-path')">← กลับ</button>
+            <h2 style="margin-bottom:6px;">✨ คณะแนะนำสำหรับคุณ</h2>
+            <p class="text-muted" style="margin-bottom:20px;">AI วิเคราะห์จากบุคลิกและคะแนนของคุณ</p>
+            <div id="recommend-result-list"></div>
+            <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="nav('compare-step1')">ไปดูตารางเปรียบเทียบ →</button>
+                <button class="btn btn-ghost" onclick="nav('home')">กลับหน้าหลัก</button>
+            </div>
         </div>
     </div>
-</div></div>
 
-<!-- ======= RECOMMEND: MBTI ======= -->
-<div id="page-recommend-mbti" class="page"><div class="container" style="max-width:600px;">
-    <button class="btn-back" onclick="nav('recommend-path')">← กลับ</button>
-    <h2 style="margin-bottom:20px;">🧬 เลือก MBTI Type</h2>
-    <div class="mbti-grid" id="mbti-grid"></div>
-    <div style="margin-top:24px;" id="mbti-score-wrap">
-        <div class="form-group">
-            <label class="form-label" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                <input type="checkbox" id="mbti-use-score"> นำชุดคะแนนมาวิเคราะห์ด้วย
-            </label>
-            <select id="mbti-score-sel" class="form-control" style="margin-top:8px;"></select>
-        </div>
-        <button class="btn btn-primary btn-block btn-lg" id="mbti-submit-btn" disabled onclick="recommendApp.processMBTI()">ดูคณะแนะนำ →</button>
-    </div>
-</div></div>
-
-<!-- ======= RECOMMEND: QUIZ ======= -->
-<div id="page-recommend-quiz" class="page"><div class="container" style="max-width:600px;">
-    <button class="btn-back" onclick="nav('recommend-path')">← กลับ</button>
-    <div id="quiz-progress" style="margin-bottom:20px;"></div>
-    <h3 id="quiz-question" style="margin-bottom:24px; line-height:1.6;"></h3>
-    <div id="quiz-input"></div>
-</div></div>
-
-<!-- ======= RECOMMEND: RESULT ======= -->
-<div id="page-recommend-result" class="page"><div class="container">
-    <button class="btn-back" onclick="nav('recommend-path')">← กลับ</button>
-    <h2 style="margin-bottom:6px;">✨ คณะแนะนำสำหรับคุณ</h2>
-    <p class="text-muted" style="margin-bottom:20px;">AI วิเคราะห์จากบุคลิกและคะแนนของคุณ</p>
-    <div id="recommend-result-list"></div>
-    <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="nav('compare-step1')">ไปดูตารางเปรียบเทียบ →</button>
-        <button class="btn btn-ghost" onclick="nav('home')">กลับหน้าหลัก</button>
-    </div>
-</div></div>
-
-<!-- ======= FOCUS: SELECT ======= -->
-<div id="page-focus-select" class="page"><div class="container" style="max-width:540px;">
-    <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
-    <h2 style="margin-bottom:24px;">📚 วิชาที่ควรโฟกัส</h2>
-    <div class="section-block">
-        <div class="form-group">
-            <label class="form-label">เลือกชุดคณะในดวงใจ</label>
-            <select id="focus-dream-sel" class="form-control"></select>
-        </div>
-        <div class="form-group">
-            <label class="form-label">เลือกชุดคะแนน (ไม่บังคับ)</label>
-            <select id="focus-score-sel" class="form-control"><option value="">— ไม่เลือก —</option></select>
-        </div>
-        <div style="background:var(--primary-light); border:1px solid var(--brown-200); border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:16px; font-size:0.88rem; color:var(--primary);">
-            💡 แนะนำให้ใส่คะแนนจริงเพื่อให้ AI วิเคราะห์ช่องว่างได้แม่นยำขึ้น
-        </div>
-        <button class="btn btn-primary btn-block btn-lg" onclick="focusApp.analyze()">คำนวณ →</button>
-    </div>
-</div></div>
-
-<!-- ======= FOCUS: RESULT ======= -->
-<div id="page-focus-result" class="page"><div class="container">
-    <button class="btn-back" onclick="nav('focus-select')">← กลับ</button>
-    <h2 style="margin-bottom:6px;">📚 วิชาที่ควรโฟกัส</h2>
-    <p class="text-muted" style="margin-bottom:24px;">เรียงจากสำคัญที่สุด ไปน้อยที่สุด</p>
-    <div id="focus-bars"></div>
-    <div id="focus-ai-wrap" style="margin-top:24px;"></div>
-</div></div>
-
-<!-- ======= MODALS ======= -->
-<div class="modal-overlay" id="modal-unsaved">
-    <div class="modal-box">
-        <h3>⚠️ ยังไม่ได้บันทึก</h3>
-        <p>ต้องการบันทึกคะแนนก่อนออกจากหน้านี้ไหม?</p>
-        <div class="modal-actions">
-            <button class="btn btn-primary" onclick="scoreApp.saveAndLeave()">💾 บันทึกและออก</button>
-            <button class="btn btn-ghost" onclick="scoreApp.leaveWithout()">ออกโดยไม่บันทึก</button>
+    <!-- ======= FOCUS: SELECT ======= -->
+    <div id="page-focus-select" class="page">
+        <div class="container" style="max-width:540px;">
+            <button class="btn-back" onclick="nav('home')">← กลับหน้าหลัก</button>
+            <h2 style="margin-bottom:24px;">📚 วิชาที่ควรโฟกัส</h2>
+            <div class="section-block">
+                <div class="form-group">
+                    <label class="form-label">เลือกชุดคณะในดวงใจ</label>
+                    <select id="focus-dream-sel" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">เลือกชุดคะแนน (ไม่บังคับ)</label>
+                    <select id="focus-score-sel" class="form-control">
+                        <option value="">— ไม่เลือก —</option>
+                    </select>
+                </div>
+                <div
+                    style="background:var(--primary-light); border:1px solid var(--brown-200); border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:16px; font-size:0.88rem; color:var(--primary);">
+                    💡 แนะนำให้ใส่คะแนนจริงเพื่อให้ AI วิเคราะห์ช่องว่างได้แม่นยำขึ้น
+                </div>
+                <button class="btn btn-primary btn-block btn-lg" onclick="focusApp.analyze()">คำนวณ →</button>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="modal-overlay" id="modal-ai-rank">
-    <div class="modal-box">
-        <h3>💡 คณะในดวงใจอันดับ 1</h3>
-        <p id="modal-ai-rank-text">คณะอันดับ 1 ของคุณคือคณะที่อยากเข้าที่สุดจริงๆ ใช่ไหม?</p>
-        <div class="modal-actions">
-            <button class="btn btn-primary" onclick="rankApp.aiRerank(true)">✅ ใช่ ล็อกอันดับ 1</button>
-            <button class="btn btn-ghost" onclick="rankApp.aiRerank(false)">❌ ไม่ใช่ จัดใหม่ทั้งหมด</button>
+    <!-- ======= FOCUS: RESULT ======= -->
+    <div id="page-focus-result" class="page">
+        <div class="container">
+            <button class="btn-back" onclick="nav('focus-select')">← กลับ</button>
+            <h2 style="margin-bottom:6px;">📚 วิชาที่ควรโฟกัส</h2>
+            <p class="text-muted" style="margin-bottom:24px;">เรียงจากสำคัญที่สุด ไปน้อยที่สุด</p>
+            <div id="focus-bars"></div>
+            <div id="focus-ai-wrap" style="margin-top:24px;"></div>
         </div>
     </div>
-</div>
 
-<div class="modal-overlay" id="modal-uni-majors">
-    <div class="modal-box" style="max-width:480px; text-align:left;">
-        <h3 id="uni-modal-title" style="margin-bottom:18px; text-align:center;">เลือกหลักสูตร</h3>
-        <div id="uni-modal-list"></div>
-        <div class="modal-actions" style="margin-top:20px;">
-            <button class="btn btn-primary" onclick="compareApp.closeUniModal()">ปิด</button>
+    <!-- ======= MODALS ======= -->
+    <div class="modal-overlay" id="modal-unsaved">
+        <div class="modal-box">
+            <h3>⚠️ ยังไม่ได้บันทึก</h3>
+            <p>ต้องการบันทึกคะแนนก่อนออกจากหน้านี้ไหม?</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="scoreApp.saveAndLeave()">💾 บันทึกและออก</button>
+                <button class="btn btn-ghost" onclick="scoreApp.leaveWithout()">ออกโดยไม่บันทึก</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-const API_URL = '/api';
-const AI_URL  = '';
+    <div class="modal-overlay" id="modal-ai-rank">
+        <div class="modal-box">
+            <h3>💡 คณะในดวงใจอันดับ 1</h3>
+            <p id="modal-ai-rank-text">คณะอันดับ 1 ของคุณคือคณะที่อยากเข้าที่สุดจริงๆ ใช่ไหม?</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="rankApp.aiRerank(true)">✅ ใช่ ล็อกอันดับ 1</button>
+                <button class="btn btn-ghost" onclick="rankApp.aiRerank(false)">❌ ไม่ใช่ จัดใหม่ทั้งหมด</button>
+            </div>
+        </div>
+    </div>
 
-// ============================================================
-// YEAR LABELS (ปี พ.ศ. 2 หลัก ของข้อมูลล่าสุด/ทำนาย)
-// ============================================================
-const YEAR_LAST = 68;          // ปีล่าสุดที่มีข้อมูลจริง (min68)
-const YEAR_PREV = YEAR_LAST - 1; // ปีก่อนหน้า (min67)
-const YEAR_PREDICT = YEAR_LAST + 1; // ปีที่ทำนาย (69)
+    <div class="modal-overlay" id="modal-uni-majors">
+        <div class="modal-box" style="max-width:480px; text-align:left;">
+            <h3 id="uni-modal-title" style="margin-bottom:18px; text-align:center;">เลือกหลักสูตร</h3>
+            <div id="uni-modal-list"></div>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button class="btn btn-primary" onclick="compareApp.closeUniModal()">ปิด</button>
+            </div>
+        </div>
+    </div>
 
-// ดึง "สาขาหลัก" จากชื่อหลักสูตร โดยตัดส่วนในวงเล็บ เช่น (ภาคปกติ)/(นานาชาติ) ออก
-// หมวดหมู่ "สาขาหลัก" ของแต่ละกลุ่มคณะ — จับด้วยคำสำคัญในชื่อหลักสูตร
-// โปรแกรมไหนมีคำใน kw อยู่ในชื่อ จะถูกจัดเข้าหมวดนั้น (เรียงตามลำดับความสำคัญ)
-const MAJOR_CATEGORIES = {
-    'วิศว': [
-        { label:'วิศวกรรมคอมพิวเตอร์/ซอฟต์แวร์', kw:['คอมพิวเตอร์','ซอฟต์แวร์'] },
-        { label:'วิศวกรรมปัญญาประดิษฐ์/ข้อมูล', kw:['ปัญญาประดิษฐ์','อัจฉริยะ','ข้อมูล','ดิจิทัล'] },
-        { label:'วิศวกรรมไฟฟ้า', kw:['ไฟฟ้า'] },
-        { label:'วิศวกรรมอิเล็กทรอนิกส์', kw:['อิเล็กทรอนิกส์'] },
-        { label:'วิศวกรรมโทรคมนาคม', kw:['โทรคมนาคม'] },
-        { label:'วิศวกรรมโยธา', kw:['โยธา'] },
-        { label:'วิศวกรรมสิ่งแวดล้อม', kw:['สิ่งแวดล้อม'] },
-        { label:'วิศวกรรมเครื่องกล', kw:['เครื่องกล'] },
-        { label:'วิศวกรรมยานยนต์', kw:['ยานยนต์'] },
-        { label:'วิศวกรรมเมคคาทรอนิกส์/หุ่นยนต์', kw:['เมคคาทรอนิกส์','หุ่นยนต์','โรโบติกส์'] },
-        { label:'วิศวกรรมการบินและอวกาศ', kw:['การบิน','อวกาศ'] },
-        { label:'วิศวกรรมเคมี', kw:['เคมี'] },
-        { label:'วิศวกรรมปิโตรเคมี/ปิโตรเลียม', kw:['ปิโตรเคมี','ปิโตรเลียม'] },
-        { label:'วิศวกรรมโลหการ/วัสดุ', kw:['โลหการ','วัสดุ'] },
-        { label:'วิศวกรรมเหมืองแร่', kw:['เหมืองแร่'] },
-        { label:'วิศวกรรมพลังงาน', kw:['พลังงาน'] },
-        { label:'วิศวกรรมอุตสาหการ', kw:['อุตสาหการ'] },
-        { label:'วิศวกรรมชีวการแพทย์', kw:['ชีวการแพทย์','ชีวเวช','ชีวภาพ'] },
-        { label:'วิศวกรรมอาหาร/เกษตร', kw:['อาหาร','เกษตร'] },
-        { label:'วิศวกรรมนาโน/โพลิเมอร์', kw:['นาโน','โพลิเมอร์'] },
-    ],
-    'วิทยาศาสตร์': [
-        { label:'วิทยาการคอมพิวเตอร์/เทคโนโลยีสารสนเทศ', kw:['คอมพิวเตอร์','สารสนเทศ','ไอที'] },
-        { label:'คณิตศาสตร์/สถิติ', kw:['คณิตศาสตร์','สถิติ'] },
-        { label:'ฟิสิกส์', kw:['ฟิสิกส์'] },
-        { label:'เคมี', kw:['เคมี'] },
-        { label:'ชีววิทยา', kw:['ชีววิทยา','ชีวว'] },
-        { label:'เทคโนโลยีชีวภาพ', kw:['เทคโนโลยีชีวภาพ'] },
-        { label:'จุลชีววิทยา', kw:['จุลชีว'] },
-        { label:'วิทยาศาสตร์การอาหาร', kw:['อาหาร'] },
-        { label:'วิทยาศาสตร์สิ่งแวดล้อม', kw:['สิ่งแวดล้อม'] },
-    ],
-    'บริหาร': [
-        { label:'การบัญชี', kw:['บัญชี'] },
-        { label:'การตลาด', kw:['การตลาด','มาร์เก็ตติ้ง'] },
-        { label:'การเงิน/การธนาคาร', kw:['การเงิน','ธนาคาร'] },
-        { label:'เศรษฐศาสตร์', kw:['เศรษฐศาสตร์'] },
-        { label:'การท่องเที่ยวและโรงแรม', kw:['ท่องเที่ยว','โรงแรม'] },
-        { label:'ธุรกิจระหว่างประเทศ', kw:['ธุรกิจระหว่างประเทศ'] },
-        { label:'บริหารธุรกิจ/การจัดการ', kw:['บริหารธุรกิจ','การจัดการ'] },
-    ],
-    'สถาปัตย์': [
-        { label:'สถาปัตยกรรมภายใน/มัณฑนศิลป์', kw:['ภายใน','มัณฑน'] },
-        { label:'การวางแผนภาคและเมือง', kw:['ผังเมือง','ภาคและเมือง'] },
-        { label:'ภูมิสถาปัตยกรรม', kw:['ภูมิสถาปัตย์'] },
-        { label:'สถาปัตยกรรม', kw:['สถาปัตยกรรม'] },
-    ],
-    'แพทย์': [
-        { label:'แพทยศาสตร์', kw:['แพทยศาสตร์'] },
-        { label:'ทันตแพทยศาสตร์', kw:['ทันตแพทย'] },
-        { label:'เภสัชศาสตร์', kw:['เภสัช'] },
-        { label:'พยาบาลศาสตร์', kw:['พยาบาล'] },
-        { label:'สัตวแพทยศาสตร์', kw:['สัตวแพทย'] },
-        { label:'เทคนิคการแพทย์', kw:['เทคนิคการแพทย์'] },
-        { label:'กายภาพบำบัด', kw:['กายภาพบำบัด'] },
-        { label:'สาธารณสุขศาสตร์', kw:['สาธารณสุข'] },
-    ],
-    'อักษร': [
-        { label:'ภาษาอังกฤษ', kw:['ภาษาอังกฤษ','อังกฤษ'] },
-        { label:'ภาษาไทย', kw:['ภาษาไทย'] },
-        { label:'ภาษาจีน', kw:['จีน'] },
-        { label:'ภาษาญี่ปุ่น', kw:['ญี่ปุ่น'] },
-        { label:'ภาษาฝรั่งเศส', kw:['ฝรั่งเศส'] },
-        { label:'ประวัติศาสตร์', kw:['ประวัติศาสตร์'] },
-        { label:'ปรัชญา', kw:['ปรัชญา'] },
-        { label:'สังคมวิทยา/มนุษยศาสตร์', kw:['สังคมวิทยา','มนุษยศาสตร์'] },
-    ],
-    'นิติ': [
-        { label:'นิติศาสตร์', kw:['นิติศาสตร์','กฎหมาย'] },
-    ],
-    'ครุ': [
-        { label:'การศึกษาปฐมวัย', kw:['ปฐมวัย'] },
-        { label:'การศึกษาพิเศษ', kw:['การศึกษาพิเศษ'] },
-        { label:'คณิตศาสตร์ศึกษา', kw:['คณิตศาสตร์'] },
-        { label:'วิทยาศาสตร์ศึกษา', kw:['วิทยาศาสตร์'] },
-        { label:'ภาษาอังกฤษศึกษา', kw:['ภาษาอังกฤษ'] },
-        { label:'พลศึกษา', kw:['พลศึกษา'] },
-    ],
-    'ศิลปกรรม': [
-        { label:'นิเทศศาสตร์', kw:['นิเทศ'] },
-        { label:'ดนตรี', kw:['ดนตรี'] },
-        { label:'ภาพยนตร์/แอนิเมชัน', kw:['ภาพยนตร์','แอนิเมชัน'] },
-        { label:'การออกแบบ', kw:['ออกแบบ'] },
-        { label:'ศิลปกรรม/วิจิตรศิลป์', kw:['วิจิตรศิลป์','ทัศนศิลป์'] },
-    ],
-};
+    <script>
+        const API_URL = '/api';
+        const AI_URL = '';
 
-function cleanProgramName(programName) {
-    if(!programName) return 'อื่นๆ';
-    let s = programName.replace(/\(.*?\)/g, '').split(',')[0];
-    s = s.trim();
-    return s || 'อื่นๆ';
-}
+        // ============================================================
+        // YEAR LABELS (ปี พ.ศ. 2 หลัก ของข้อมูลล่าสุด/ทำนาย)
+        // ============================================================
+        const YEAR_LAST = 68;          // ปีล่าสุดที่มีข้อมูลจริง (min68)
+        const YEAR_PREV = YEAR_LAST - 1; // ปีก่อนหน้า (min67)
+        const YEAR_PREDICT = YEAR_LAST + 1; // ปีที่ทำนาย (69)
 
-// หา "สาขาหลัก" ของหลักสูตร โดยจับคำสำคัญตามกลุ่มคณะก่อน ถ้าไม่เข้าหมวดไหนเลยจะ fallback เป็นชื่อที่ตัดแล้ว
-function getCoreMajor(programName, groupKw) {
-    if(!programName) return 'อื่นๆ';
-    const cats = MAJOR_CATEGORIES[groupKw] || [];
-    for(const cat of cats) {
-        if(cat.kw.some(k => programName.includes(k))) return cat.label;
-    }
-    return cleanProgramName(programName);
-}
+        // ดึง "สาขาหลัก" จากชื่อหลักสูตร โดยตัดส่วนในวงเล็บ เช่น (ภาคปกติ)/(นานาชาติ) ออก
+        // หมวดหมู่ "สาขาหลัก" ของแต่ละกลุ่มคณะ — จับด้วยคำสำคัญในชื่อหลักสูตร
+        // โปรแกรมไหนมีคำใน kw อยู่ในชื่อ จะถูกจัดเข้าหมวดนั้น (เรียงตามลำดับความสำคัญ)
+        const MAJOR_CATEGORIES = {
+            'วิศว': [
+                { label: 'วิศวกรรมคอมพิวเตอร์/ซอฟต์แวร์', kw: ['คอมพิวเตอร์', 'ซอฟต์แวร์'] },
+                { label: 'วิศวกรรมปัญญาประดิษฐ์/ข้อมูล', kw: ['ปัญญาประดิษฐ์', 'อัจฉริยะ', 'ข้อมูล', 'ดิจิทัล'] },
+                { label: 'วิศวกรรมไฟฟ้า', kw: ['ไฟฟ้า'] },
+                { label: 'วิศวกรรมอิเล็กทรอนิกส์', kw: ['อิเล็กทรอนิกส์'] },
+                { label: 'วิศวกรรมโทรคมนาคม', kw: ['โทรคมนาคม'] },
+                { label: 'วิศวกรรมโยธา', kw: ['โยธา'] },
+                { label: 'วิศวกรรมสิ่งแวดล้อม', kw: ['สิ่งแวดล้อม'] },
+                { label: 'วิศวกรรมเครื่องกล', kw: ['เครื่องกล'] },
+                { label: 'วิศวกรรมยานยนต์', kw: ['ยานยนต์'] },
+                { label: 'วิศวกรรมเมคคาทรอนิกส์/หุ่นยนต์', kw: ['เมคคาทรอนิกส์', 'หุ่นยนต์', 'โรโบติกส์'] },
+                { label: 'วิศวกรรมการบินและอวกาศ', kw: ['การบิน', 'อวกาศ'] },
+                { label: 'วิศวกรรมเคมี', kw: ['เคมี'] },
+                { label: 'วิศวกรรมปิโตรเคมี/ปิโตรเลียม', kw: ['ปิโตรเคมี', 'ปิโตรเลียม'] },
+                { label: 'วิศวกรรมโลหการ/วัสดุ', kw: ['โลหการ', 'วัสดุ'] },
+                { label: 'วิศวกรรมเหมืองแร่', kw: ['เหมืองแร่'] },
+                { label: 'วิศวกรรมพลังงาน', kw: ['พลังงาน'] },
+                { label: 'วิศวกรรมอุตสาหการ', kw: ['อุตสาหการ'] },
+                { label: 'วิศวกรรมชีวการแพทย์', kw: ['ชีวการแพทย์', 'ชีวเวช', 'ชีวภาพ'] },
+                { label: 'วิศวกรรมอาหาร/เกษตร', kw: ['อาหาร', 'เกษตร'] },
+                { label: 'วิศวกรรมนาโน/โพลิเมอร์', kw: ['นาโน', 'โพลิเมอร์'] },
+            ],
+            'วิทยาศาสตร์': [
+                { label: 'วิทยาการคอมพิวเตอร์/เทคโนโลยีสารสนเทศ', kw: ['คอมพิวเตอร์', 'สารสนเทศ', 'ไอที'] },
+                { label: 'คณิตศาสตร์/สถิติ', kw: ['คณิตศาสตร์', 'สถิติ'] },
+                { label: 'ฟิสิกส์', kw: ['ฟิสิกส์'] },
+                { label: 'เคมี', kw: ['เคมี'] },
+                { label: 'ชีววิทยา', kw: ['ชีววิทยา', 'ชีวว'] },
+                { label: 'เทคโนโลยีชีวภาพ', kw: ['เทคโนโลยีชีวภาพ'] },
+                { label: 'จุลชีววิทยา', kw: ['จุลชีว'] },
+                { label: 'วิทยาศาสตร์การอาหาร', kw: ['อาหาร'] },
+                { label: 'วิทยาศาสตร์สิ่งแวดล้อม', kw: ['สิ่งแวดล้อม'] },
+            ],
+            'บริหาร': [
+                { label: 'การบัญชี', kw: ['บัญชี'] },
+                { label: 'การตลาด', kw: ['การตลาด', 'มาร์เก็ตติ้ง'] },
+                { label: 'การเงิน/การธนาคาร', kw: ['การเงิน', 'ธนาคาร'] },
+                { label: 'เศรษฐศาสตร์', kw: ['เศรษฐศาสตร์'] },
+                { label: 'การท่องเที่ยวและโรงแรม', kw: ['ท่องเที่ยว', 'โรงแรม'] },
+                { label: 'ธุรกิจระหว่างประเทศ', kw: ['ธุรกิจระหว่างประเทศ'] },
+                { label: 'บริหารธุรกิจ/การจัดการ', kw: ['บริหารธุรกิจ', 'การจัดการ'] },
+            ],
+            'สถาปัตย์': [
+                { label: 'สถาปัตยกรรมภายใน/มัณฑนศิลป์', kw: ['ภายใน', 'มัณฑน'] },
+                { label: 'การวางแผนภาคและเมือง', kw: ['ผังเมือง', 'ภาคและเมือง'] },
+                { label: 'ภูมิสถาปัตยกรรม', kw: ['ภูมิสถาปัตย์'] },
+                { label: 'สถาปัตยกรรม', kw: ['สถาปัตยกรรม'] },
+            ],
+            'แพทย์': [
+                { label: 'แพทยศาสตร์', kw: ['แพทยศาสตร์'] },
+                { label: 'ทันตแพทยศาสตร์', kw: ['ทันตแพทย'] },
+                { label: 'เภสัชศาสตร์', kw: ['เภสัช'] },
+                { label: 'พยาบาลศาสตร์', kw: ['พยาบาล'] },
+                { label: 'สัตวแพทยศาสตร์', kw: ['สัตวแพทย'] },
+                { label: 'เทคนิคการแพทย์', kw: ['เทคนิคการแพทย์'] },
+                { label: 'กายภาพบำบัด', kw: ['กายภาพบำบัด'] },
+                { label: 'สาธารณสุขศาสตร์', kw: ['สาธารณสุข'] },
+            ],
+            'อักษร': [
+                { label: 'ภาษาอังกฤษ', kw: ['ภาษาอังกฤษ', 'อังกฤษ'] },
+                { label: 'ภาษาไทย', kw: ['ภาษาไทย'] },
+                { label: 'ภาษาจีน', kw: ['จีน'] },
+                { label: 'ภาษาญี่ปุ่น', kw: ['ญี่ปุ่น'] },
+                { label: 'ภาษาฝรั่งเศส', kw: ['ฝรั่งเศส'] },
+                { label: 'ประวัติศาสตร์', kw: ['ประวัติศาสตร์'] },
+                { label: 'ปรัชญา', kw: ['ปรัชญา'] },
+                { label: 'สังคมวิทยา/มนุษยศาสตร์', kw: ['สังคมวิทยา', 'มนุษยศาสตร์'] },
+            ],
+            'นิติ': [
+                { label: 'นิติศาสตร์', kw: ['นิติศาสตร์', 'กฎหมาย'] },
+            ],
+            'ครุ': [
+                { label: 'การศึกษาปฐมวัย', kw: ['ปฐมวัย'] },
+                { label: 'การศึกษาพิเศษ', kw: ['การศึกษาพิเศษ'] },
+                { label: 'คณิตศาสตร์ศึกษา', kw: ['คณิตศาสตร์'] },
+                { label: 'วิทยาศาสตร์ศึกษา', kw: ['วิทยาศาสตร์'] },
+                { label: 'ภาษาอังกฤษศึกษา', kw: ['ภาษาอังกฤษ'] },
+                { label: 'พลศึกษา', kw: ['พลศึกษา'] },
+            ],
+            'ศิลปกรรม': [
+                { label: 'นิเทศศาสตร์', kw: ['นิเทศ'] },
+                { label: 'ดนตรี', kw: ['ดนตรี'] },
+                { label: 'ภาพยนตร์/แอนิเมชัน', kw: ['ภาพยนตร์', 'แอนิเมชัน'] },
+                { label: 'การออกแบบ', kw: ['ออกแบบ'] },
+                { label: 'ศิลปกรรม/วิจิตรศิลป์', kw: ['วิจิตรศิลป์', 'ทัศนศิลป์'] },
+            ],
+        };
+
+        function cleanProgramName(programName) {
+            if (!programName) return 'อื่นๆ';
+            let s = programName.replace(/\(.*?\)/g, '').split(',')[0];
+            s = s.trim();
+            return s || 'อื่นๆ';
+        }
+
+        // หา "สาขาหลัก" ของหลักสูตร โดยจับคำสำคัญตามกลุ่มคณะก่อน ถ้าไม่เข้าหมวดไหนเลยจะ fallback เป็นชื่อที่ตัดแล้ว
+        function getCoreMajor(programName, groupKw) {
+            if (!programName) return 'อื่นๆ';
+            const cats = MAJOR_CATEGORIES[groupKw] || [];
+            for (const cat of cats) {
+                if (cat.kw.some(k => programName.includes(k))) return cat.label;
+            }
+            return cleanProgramName(programName);
+        }
 
 
-const SUBJ_MAP = {
-    gpax:'GPAX', gpa_math:'GPA คณิต', gpa_sci:'GPA วิทย์', gpa_lang:'GPA ภาษา',
-    tgat:'TGAT รวม', tgat1:'TGAT1', tgat2:'TGAT2', tgat3:'TGAT3',
-    tpat1:'TPAT1 (กสพท)', tpat3:'TPAT3 (วิศวะ)', tpat4:'TPAT4 (สถาปัตย์)', tpat5:'TPAT5 (ครู)',
-    tpat21:'TPAT21 (ทัศนศิลป์)', tpat22:'TPAT22 (ดนตรี)', tpat23:'TPAT23 (นาฏศิลป์)',
-    a_lv_61:'A-Level คณิต 1', a_lv_62:'A-Level คณิต 2', a_lv_63:'A-Level วิทย์ประยุกต์',
-    a_lv_64:'A-Level ฟิสิกส์', a_lv_65:'A-Level เคมี', a_lv_66:'A-Level ชีวะ',
-    a_lv_70:'A-Level สังคม', a_lv_81:'A-Level ไทย', a_lv_82:'A-Level อังกฤษ',
-    a_lv_83:'A-Level ฝรั่งเศส', a_lv_84:'A-Level เยอรมัน', a_lv_85:'A-Level ญี่ปุ่น',
-    a_lv_86:'A-Level เกาหลี', a_lv_87:'A-Level จีน', a_lv_88:'A-Level บาลี',
-};
+        const SUBJ_MAP = {
+            gpax: 'GPAX', gpa_math: 'GPA คณิต', gpa_sci: 'GPA วิทย์', gpa_lang: 'GPA ภาษา',
+            tgat: 'TGAT รวม', tgat1: 'TGAT1', tgat2: 'TGAT2', tgat3: 'TGAT3',
+            tpat1: 'TPAT1 (กสพท)', tpat3: 'TPAT3 (วิศวะ)', tpat4: 'TPAT4 (สถาปัตย์)', tpat5: 'TPAT5 (ครู)',
+            tpat21: 'TPAT21 (ทัศนศิลป์)', tpat22: 'TPAT22 (ดนตรี)', tpat23: 'TPAT23 (นาฏศิลป์)',
+            a_lv_61: 'A-Level คณิต 1', a_lv_62: 'A-Level คณิต 2', a_lv_63: 'A-Level วิทย์ประยุกต์',
+            a_lv_64: 'A-Level ฟิสิกส์', a_lv_65: 'A-Level เคมี', a_lv_66: 'A-Level ชีวะ',
+            a_lv_70: 'A-Level สังคม', a_lv_81: 'A-Level ไทย', a_lv_82: 'A-Level อังกฤษ',
+            a_lv_83: 'A-Level ฝรั่งเศส', a_lv_84: 'A-Level เยอรมัน', a_lv_85: 'A-Level ญี่ปุ่น',
+            a_lv_86: 'A-Level เกาหลี', a_lv_87: 'A-Level จีน', a_lv_88: 'A-Level บาลี',
+        };
 
-// input id → key
-const SCORE_FIELDS = {
-    's-gpax':'gpax','s-gpa-math':'gpa_math','s-gpa-sci':'gpa_sci','s-gpa-lang':'gpa_lang',
-    's-tgat1':'tgat1','s-tgat2':'tgat2','s-tgat3':'tgat3',
-    's-tpat1':'tpat1','s-tpat3':'tpat3','s-tpat4':'tpat4','s-tpat5':'tpat5',
-    's-tpat21':'tpat21','s-tpat22':'tpat22','s-tpat23':'tpat23',
-    's-alv61':'a_lv_61','s-alv62':'a_lv_62','s-alv63':'a_lv_63',
-    's-alv64':'a_lv_64','s-alv65':'a_lv_65','s-alv66':'a_lv_66',
-    's-alv70':'a_lv_70','s-alv81':'a_lv_81','s-alv82':'a_lv_82',
-    's-alv83':'a_lv_83','s-alv84':'a_lv_84','s-alv85':'a_lv_85',
-    's-alv86':'a_lv_86','s-alv87':'a_lv_87','s-alv88':'a_lv_88',
-};
+        // input id → key
+        const SCORE_FIELDS = {
+            's-gpax': 'gpax', 's-gpa-math': 'gpa_math', 's-gpa-sci': 'gpa_sci', 's-gpa-lang': 'gpa_lang',
+            's-tgat1': 'tgat1', 's-tgat2': 'tgat2', 's-tgat3': 'tgat3',
+            's-tpat1': 'tpat1', 's-tpat3': 'tpat3', 's-tpat4': 'tpat4', 's-tpat5': 'tpat5',
+            's-tpat21': 'tpat21', 's-tpat22': 'tpat22', 's-tpat23': 'tpat23',
+            's-alv61': 'a_lv_61', 's-alv62': 'a_lv_62', 's-alv63': 'a_lv_63',
+            's-alv64': 'a_lv_64', 's-alv65': 'a_lv_65', 's-alv66': 'a_lv_66',
+            's-alv70': 'a_lv_70', 's-alv81': 'a_lv_81', 's-alv82': 'a_lv_82',
+            's-alv83': 'a_lv_83', 's-alv84': 'a_lv_84', 's-alv85': 'a_lv_85',
+            's-alv86': 'a_lv_86', 's-alv87': 'a_lv_87', 's-alv88': 'a_lv_88',
+        };
 
-// ============================================================
-// CORE NAV + DB
-// ============================================================
-let DB = [];
+        // ============================================================
+        // CORE NAV + DB
+        // ============================================================
+        let DB = [];
 
-function nav(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + pageId).classList.add('active');
-    window.scrollTo(0,0);
-    if(pageId==='scores-list') scoreApp.renderList();
-    if(pageId==='dream-list')  dreamApp.renderList();
-    if(pageId==='rank-select') rankApp.loadDropdowns();
-    if(pageId==='focus-select') focusApp.loadDropdowns();
-    if(pageId==='recommend-mbti') recommendApp.loadDropdowns();
-}
+        function nav(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            window.scrollTo(0, 0);
+            if (pageId === 'scores-list') scoreApp.renderList();
+            if (pageId === 'dream-list') dreamApp.renderList();
+            if (pageId === 'rank-select') rankApp.loadDropdowns();
+            if (pageId === 'focus-select') focusApp.loadDropdowns();
+            if (pageId === 'recommend-mbti') recommendApp.loadDropdowns();
+        }
 
-async function initDB() {
-    try {
-        const r = await fetch(`${API_URL}/database`);
-        DB = await r.json();
-        const badge = document.getElementById('db-badge');
-        badge.className = 'db-badge online';
-        badge.innerText = `🟢 เชื่อมต่อแล้ว (${DB.length} หลักสูตร)`;
-    } catch(e) {
-        document.getElementById('db-badge').innerText = '🔴 ไม่ได้เชื่อมต่อ — รัน node server.js ด้วย';
-    }
-}
+        async function initDB() {
+            try {
+                const r = await fetch(`${API_URL}/database`);
+                DB = await r.json();
+                const badge = document.getElementById('db-badge');
+                badge.className = 'db-badge online';
+                badge.innerText = `🟢 เชื่อมต่อแล้ว (${DB.length} หลักสูตร)`;
+                const focusCard = document.getElementById('hub-focus-card');
+                if (focusCard) focusCard.style.display = '';
+            } catch (e) {
+                document.getElementById('db-badge').innerText = '🔴 ไม่ได้เชื่อมต่อ — รัน node server.js ด้วย';
+            }
+        }
 
-// ============================================================
-// ACCORDION
-// ============================================================
-function toggleAccordion(id) {
-    const body = document.getElementById(id);
-    const arr  = document.getElementById('arr-' + id);
-    const isOpen = body.classList.contains('open');
-    body.classList.toggle('open', !isOpen);
-    if(arr) arr.style.transform = isOpen ? '' : 'rotate(180deg)';
-}
+        // ============================================================
+        // ACCORDION
+        // ============================================================
+        function toggleAccordion(id) {
+            const body = document.getElementById(id);
+            const arr = document.getElementById('arr-' + id);
+            const isOpen = body.classList.contains('open');
+            body.classList.toggle('open', !isOpen);
+            if (arr) arr.style.transform = isOpen ? '' : 'rotate(180deg)';
+        }
 
-// ============================================================
-// SCORE APP
-// ============================================================
-const scoreApp = {
-    editIndex: -1,
-    isDirty: false,
-    leaveTarget: '',
+        // ============================================================
+        // SCORE APP
+        // ============================================================
+        const scoreApp = {
+            editIndex: -1,
+            isDirty: false,
+            leaveTarget: '',
 
-    get data() { return JSON.parse(localStorage.getItem('scores') || '[]'); },
-    save_(d) { localStorage.setItem('scores', JSON.stringify(d)); },
+            get data() { return JSON.parse(localStorage.getItem('scores') || '[]'); },
+            save_(d) { localStorage.setItem('scores', JSON.stringify(d)); },
 
-    renderList() {
-        const d = this.data;
-        const el = document.getElementById('score-list');
-        if(!d.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>ยังไม่มีชุดคะแนน</p></div>'; return; }
-        el.innerHTML = d.map((s,i) => `
+            renderList() {
+                const d = this.data;
+                const el = document.getElementById('score-list');
+                if (!d.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>ยังไม่มีชุดคะแนน</p></div>'; return; }
+                el.innerHTML = d.map((s, i) => `
             <div class="list-item">
-                <div><h3>${s.name}</h3><p class="text-muted">บันทึกเมื่อ ${s.date||'—'}</p></div>
+                <div><h3>${s.name}</h3><p class="text-muted">บันทึกเมื่อ ${s.date || '—'}</p></div>
                 <div style="display:flex;gap:8px;">
                     <button class="btn btn-outline btn-sm" onclick="scoreApp.edit(${i})">✏️ แก้ไข</button>
                     <button class="btn btn-danger btn-sm" onclick="scoreApp.del(${i})">🗑️</button>
                 </div>
             </div>`).join('');
-    },
+            },
 
-    startInput() {
-        const name = document.getElementById('score-name-input').value.trim();
-        if(!name) { alert('กรุณาตั้งชื่อชุดคะแนนก่อนนะ'); return; }
-        this.editIndex = -1;
-        this.isDirty = false;
-        document.getElementById('score-input-title').innerText = `กรอกคะแนน: ${name}`;
-        document.getElementById('score-name-input').dataset.pendingName = name;
-        Object.keys(SCORE_FIELDS).forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-        this._setupDirty();
-        nav('scores-input');
-    },
+            startInput() {
+                const name = document.getElementById('score-name-input').value.trim();
+                if (!name) { alert('กรุณาตั้งชื่อชุดคะแนนก่อนนะ'); return; }
+                this.editIndex = -1;
+                this.isDirty = false;
+                document.getElementById('score-input-title').innerText = `กรอกคะแนน: ${name}`;
+                document.getElementById('score-name-input').dataset.pendingName = name;
+                Object.keys(SCORE_FIELDS).forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+                this._setupDirty();
+                nav('scores-input');
+            },
 
-    edit(i) {
-        const s = this.data[i];
-        this.editIndex = i;
-        this.isDirty = false;
-        document.getElementById('score-input-title').innerText = `แก้ไขชุดคะแนน: ${s.name}`;
-        document.getElementById('score-name-input').dataset.pendingName = s.name;
-        Object.keys(SCORE_FIELDS).forEach(id => {
-            const key = SCORE_FIELDS[id];
-            const el = document.getElementById(id);
-            if(el) el.value = s[key] ?? '';
-        });
-        this._setupDirty();
-        nav('scores-input');
-    },
+            edit(i) {
+                const s = this.data[i];
+                this.editIndex = i;
+                this.isDirty = false;
+                document.getElementById('score-input-title').innerText = `แก้ไขชุดคะแนน: ${s.name}`;
+                document.getElementById('score-name-input').dataset.pendingName = s.name;
+                Object.keys(SCORE_FIELDS).forEach(id => {
+                    const key = SCORE_FIELDS[id];
+                    const el = document.getElementById(id);
+                    if (el) el.value = s[key] ?? '';
+                });
+                this._setupDirty();
+                nav('scores-input');
+            },
 
-    _setupDirty() {
-        Object.keys(SCORE_FIELDS).forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.oninput = () => { this.isDirty = true; };
-        });
-        document.getElementById('score-input-back-btn').onclick = () => {
-            if(this.isDirty) { document.getElementById('modal-unsaved').classList.add('show'); }
-            else { nav('scores-list'); }
+            _setupDirty() {
+                Object.keys(SCORE_FIELDS).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.oninput = () => { this.isDirty = true; };
+                });
+                document.getElementById('score-input-back-btn').onclick = () => {
+                    if (this.isDirty) { document.getElementById('modal-unsaved').classList.add('show'); }
+                    else { nav('scores-list'); }
+                };
+            },
+
+            save() {
+                const d = this.data;
+                const name = document.getElementById('score-name-input').dataset.pendingName || 'ไม่มีชื่อ';
+                const obj = { name, date: new Date().toLocaleDateString('th-TH') };
+                Object.keys(SCORE_FIELDS).forEach(id => {
+                    const key = SCORE_FIELDS[id];
+                    const val = parseFloat(document.getElementById(id)?.value);
+                    obj[key] = isNaN(val) ? null : val;
+                });
+                // คำนวณ TGAT รวม
+                obj.tgat = ((obj.tgat1 || 0) + (obj.tgat2 || 0) + (obj.tgat3 || 0)) / 3;
+                if (this.editIndex >= 0) d[this.editIndex] = obj; else d.push(obj);
+                this.save_(d);
+                this.isDirty = false;
+                alert('บันทึกเรียบร้อย ✅');
+                nav('scores-list');
+            },
+
+            saveAndLeave() {
+                this.save();
+                document.getElementById('modal-unsaved').classList.remove('show');
+            },
+            leaveWithout() {
+                this.isDirty = false;
+                document.getElementById('modal-unsaved').classList.remove('show');
+                nav('scores-list');
+            },
+            del(i) {
+                if (!confirm('ลบชุดคะแนนนี้?')) return;
+                const d = this.data; d.splice(i, 1); this.save_(d); this.renderList();
+            },
         };
-    },
 
-    save() {
-        const d = this.data;
-        const name = document.getElementById('score-name-input').dataset.pendingName || 'ไม่มีชื่อ';
-        const obj = { name, date: new Date().toLocaleDateString('th-TH') };
-        Object.keys(SCORE_FIELDS).forEach(id => {
-            const key = SCORE_FIELDS[id];
-            const val = parseFloat(document.getElementById(id)?.value);
-            obj[key] = isNaN(val) ? null : val;
-        });
-        // คำนวณ TGAT รวม
-        obj.tgat = ((obj.tgat1||0)+(obj.tgat2||0)+(obj.tgat3||0))/3;
-        if(this.editIndex >= 0) d[this.editIndex] = obj; else d.push(obj);
-        this.save_(d);
-        this.isDirty = false;
-        alert('บันทึกเรียบร้อย ✅');
-        nav('scores-list');
-    },
+        // ============================================================
+        // DREAM APP
+        // ============================================================
+        const dreamApp = {
+            activeSet: -1,
+            get data() { return JSON.parse(localStorage.getItem('dreams') || '[]'); },
+            save_(d) { localStorage.setItem('dreams', JSON.stringify(d)); },
 
-    saveAndLeave() {
-        this.save();
-        document.getElementById('modal-unsaved').classList.remove('show');
-    },
-    leaveWithout() {
-        this.isDirty = false;
-        document.getElementById('modal-unsaved').classList.remove('show');
-        nav('scores-list');
-    },
-    del(i) {
-        if(!confirm('ลบชุดคะแนนนี้?')) return;
-        const d = this.data; d.splice(i,1); this.save_(d); this.renderList();
-    },
-};
-
-// ============================================================
-// DREAM APP
-// ============================================================
-const dreamApp = {
-    activeSet: -1,
-    get data() { return JSON.parse(localStorage.getItem('dreams') || '[]'); },
-    save_(d) { localStorage.setItem('dreams', JSON.stringify(d)); },
-
-    renderList() {
-        const d = this.data;
-        const el = document.getElementById('dream-list');
-        if(!d.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">💭</div><p>ยังไม่มีชุดคณะในดวงใจ</p></div>'; return; }
-        el.innerHTML = d.map((s,i) => `
+            renderList() {
+                const d = this.data;
+                const el = document.getElementById('dream-list');
+                if (!d.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">💭</div><p>ยังไม่มีชุดคณะในดวงใจ</p></div>'; return; }
+                el.innerHTML = d.map((s, i) => `
             <div class="list-item">
                 <div><h3>${s.name}</h3><p class="text-muted">${s.items.length} คณะ</p></div>
                 <div style="display:flex;gap:8px;">
@@ -893,57 +1655,57 @@ const dreamApp = {
                     <button class="btn btn-danger btn-sm" onclick="dreamApp.del(${i})">🗑️</button>
                 </div>
             </div>`).join('');
-    },
+            },
 
-    startManage() {
-        const name = document.getElementById('dream-name-input').value.trim();
-        if(!name) { alert('ตั้งชื่อชุดคณะก่อนนะ'); return; }
-        const d = this.data;
-        d.push({ name, items: [] });
-        this.save_(d);
-        this.open(d.length - 1);
-    },
+            startManage() {
+                const name = document.getElementById('dream-name-input').value.trim();
+                if (!name) { alert('ตั้งชื่อชุดคณะก่อนนะ'); return; }
+                const d = this.data;
+                d.push({ name, items: [] });
+                this.save_(d);
+                this.open(d.length - 1);
+            },
 
-    open(i) {
-        this.activeSet = i;
-        const s = this.data[i];
-        document.getElementById('dream-manage-title').innerText = `💛 ${s.name}`;
-        this.renderSlots();
-        nav('dream-manage');
-    },
+            open(i) {
+                this.activeSet = i;
+                const s = this.data[i];
+                document.getElementById('dream-manage-title').innerText = `💛 ${s.name}`;
+                this.renderSlots();
+                nav('dream-manage');
+            },
 
-    renderSlots() {
-        const s = this.data[this.activeSet];
-        const el = document.getElementById('dream-slots');
-        if(!s.items.length) {
-            el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>ค้นหาและเพิ่มคณะที่อยากเข้าได้ที่นี่</p></div>`;
-            return;
-        }
-        el.innerHTML = s.items.map((fac, i) => `
+            renderSlots() {
+                const s = this.data[this.activeSet];
+                const el = document.getElementById('dream-slots');
+                if (!s.items.length) {
+                    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>ค้นหาและเพิ่มคณะที่อยากเข้าได้ที่นี่</p></div>`;
+                    return;
+                }
+                el.innerHTML = s.items.map((fac, i) => `
             <div class="drag-item" draggable="true" data-idx="${i}"
                 ondragstart="dreamApp.dragStart(event,${i})"
                 ondragover="dreamApp.dragOver(event)"
                 ondrop="dreamApp.drop(event,${i})">
                 <span class="drag-handle">☰</span>
-                <span class="drag-rank">${i+1}</span>
+                <span class="drag-rank">${i + 1}</span>
                 <div style="flex:1;">
                     <div style="font-weight:600;">${fac.uni}</div>
                     <div class="text-muted" style="font-size:0.85rem;">${fac.group} — ${fac.program}</div>
                 </div>
                 <button class="btn btn-danger btn-sm" onclick="dreamApp.remove(${i})">🗑️</button>
             </div>`).join('');
-    },
+            },
 
-    search() {
-        const q = document.getElementById('dream-search').value.trim();
-        const box = document.getElementById('dream-search-results');
-        if(q.length < 2) { box.style.display='none'; return; }
-        const results = DB.filter(c =>
-            c.uni.includes(q) || c.program.includes(q) || c.group.includes(q)
-        ).slice(0, 30);
-        if(!results.length) { box.style.display='none'; return; }
-        box.style.display = 'block';
-        box.innerHTML = results.map(c => `
+            search() {
+                const q = document.getElementById('dream-search').value.trim();
+                const box = document.getElementById('dream-search-results');
+                if (q.length < 2) { box.style.display = 'none'; return; }
+                const results = DB.filter(c =>
+                    c.uni.includes(q) || c.program.includes(q) || c.group.includes(q)
+                ).slice(0, 30);
+                if (!results.length) { box.style.display = 'none'; return; }
+                box.style.display = 'block';
+                box.innerHTML = results.map(c => `
             <div class="search-result-item">
                 <div>
                     <div style="font-weight:600;">${c.uni}</div>
@@ -951,122 +1713,122 @@ const dreamApp = {
                 </div>
                 <button class="btn btn-primary btn-sm" onclick="dreamApp.add('${c.id}')">+ เพิ่ม</button>
             </div>`).join('');
-    },
+            },
 
-    add(facId) {
-        const d = this.data;
-        const s = d[this.activeSet];
-        if(s.items.length >= 10) { alert('เพิ่มได้สูงสุด 10 คณะ'); return; }
-        if(s.items.find(f => f.id === facId)) { alert('มีคณะนี้อยู่แล้ว'); return; }
-        const fac = DB.find(c => c.id === facId);
-        if(!fac) return;
-        s.items.push({ id: fac.id, uni: fac.uni, group: fac.group, program: fac.program });
-        this.save_(d);
-        this.renderSlots();
-        // ไม่เคลียร์ search bar ตามที่ต้องการ
-    },
+            add(facId) {
+                const d = this.data;
+                const s = d[this.activeSet];
+                if (s.items.length >= 10) { alert('เพิ่มได้สูงสุด 10 คณะ'); return; }
+                if (s.items.find(f => f.id === facId)) { alert('มีคณะนี้อยู่แล้ว'); return; }
+                const fac = DB.find(c => c.id === facId);
+                if (!fac) return;
+                s.items.push({ id: fac.id, uni: fac.uni, group: fac.group, program: fac.program });
+                this.save_(d);
+                this.renderSlots();
+                // ไม่เคลียร์ search bar ตามที่ต้องการ
+            },
 
-    remove(i) {
-        const d = this.data;
-        d[this.activeSet].items.splice(i, 1);
-        this.save_(d);
-        this.renderSlots();
-    },
+            remove(i) {
+                const d = this.data;
+                d[this.activeSet].items.splice(i, 1);
+                this.save_(d);
+                this.renderSlots();
+            },
 
-    del(i) {
-        if(!confirm('ลบชุดคณะนี้?')) return;
-        const d = this.data; d.splice(i,1); this.save_(d); this.renderList();
-    },
+            del(i) {
+                if (!confirm('ลบชุดคณะนี้?')) return;
+                const d = this.data; d.splice(i, 1); this.save_(d); this.renderList();
+            },
 
-    dragIdx: null,
-    dragStart(e, i) { this.dragIdx = i; e.currentTarget.classList.add('dragging'); },
-    dragOver(e) { e.preventDefault(); },
-    drop(e, targetIdx) {
-        e.preventDefault();
-        if(this.dragIdx === null || this.dragIdx === targetIdx) { this.dragIdx=null; return; }
-        const d = this.data;
-        const items = d[this.activeSet].items;
-        const [moved] = items.splice(this.dragIdx, 1);
-        items.splice(targetIdx, 0, moved);
-        this.save_(d);
-        this.dragIdx = null;
-        this.renderSlots();
-    },
-};
+            dragIdx: null,
+            dragStart(e, i) { this.dragIdx = i; e.currentTarget.classList.add('dragging'); },
+            dragOver(e) { e.preventDefault(); },
+            drop(e, targetIdx) {
+                e.preventDefault();
+                if (this.dragIdx === null || this.dragIdx === targetIdx) { this.dragIdx = null; return; }
+                const d = this.data;
+                const items = d[this.activeSet].items;
+                const [moved] = items.splice(this.dragIdx, 1);
+                items.splice(targetIdx, 0, moved);
+                this.save_(d);
+                this.dragIdx = null;
+                this.renderSlots();
+            },
+        };
 
-// ============================================================
-// COMPARE APP
-// ============================================================
-const FACULTY_GROUPS = [
-    { icon:'⚙️', label:'วิศวกรรมศาสตร์', kw:'วิศว' },
-    { icon:'🔬', label:'วิทยาศาสตร์', kw:'วิทยาศาสตร์' },
-    { icon:'🏛️', label:'สถาปัตยกรรม', kw:'สถาปัตย์' },
-    { icon:'💊', label:'แพทย์/สาธารณสุข', kw:'แพทย์' },
-    { icon:'📖', label:'ศิลปศาสตร์/อักษร', kw:'อักษร' },
-    { icon:'💼', label:'บริหาร/เศรษฐศาสตร์', kw:'บริหาร' },
-    { icon:'⚖️', label:'นิติศาสตร์', kw:'นิติ' },
-    { icon:'🎨', label:'ศิลปกรรม/นิเทศ', kw:'ศิลปกรรม' },
-    { icon:'👶', label:'ครุศาสตร์/ศึกษา', kw:'ครุ' },
-];
+        // ============================================================
+        // COMPARE APP
+        // ============================================================
+        const FACULTY_GROUPS = [
+            { icon: '⚙️', label: 'วิศวกรรมศาสตร์', kw: 'วิศว' },
+            { icon: '🔬', label: 'วิทยาศาสตร์', kw: 'วิทยาศาสตร์' },
+            { icon: '🏛️', label: 'สถาปัตยกรรม', kw: 'สถาปัตย์' },
+            { icon: '💊', label: 'แพทย์/สาธารณสุข', kw: 'แพทย์' },
+            { icon: '📖', label: 'ศิลปศาสตร์/อักษร', kw: 'อักษร' },
+            { icon: '💼', label: 'บริหาร/เศรษฐศาสตร์', kw: 'บริหาร' },
+            { icon: '⚖️', label: 'นิติศาสตร์', kw: 'นิติ' },
+            { icon: '🎨', label: 'ศิลปกรรม/นิเทศ', kw: 'ศิลปกรรม' },
+            { icon: '👶', label: 'ครุศาสตร์/ศึกษา', kw: 'ครุ' },
+        ];
 
-const compareApp = {
-    selectedGroup: null,
-    selectedMajor: null,
-    selectedPrograms: new Set(),
-    currentMajors: [],
-    currentUnis: [],
-    currentModalProgs: [],
+        const compareApp = {
+            selectedGroup: null,
+            selectedMajor: null,
+            selectedPrograms: new Set(),
+            currentMajors: [],
+            currentUnis: [],
+            currentModalProgs: [],
 
-    init() {
-        const el = document.getElementById('compare-groups');
-        el.innerHTML = FACULTY_GROUPS.map((g,i) => `
+            init() {
+                const el = document.getElementById('compare-groups');
+                el.innerHTML = FACULTY_GROUPS.map((g, i) => `
             <div class="faculty-group-btn" onclick="compareApp.selectGroup(${i})">
                 <div class="faculty-group-icon">${g.icon}</div>
                 <div style="font-weight:600;">${g.label}</div>
             </div>`).join('');
-    },
+            },
 
-    selectedMajors: new Set(), 
+            selectedMajors: new Set(),
 
-    selectGroup(i) {
-        this.selectedGroup = FACULTY_GROUPS[i];
-        this.selectedMajors = new Set();
-        const progs = DB.filter(c => c.group.includes(this.selectedGroup.kw));
-        this.currentMajors = [...new Set(progs.map(c => getCoreMajor(c.program, this.selectedGroup.kw)))]
-            .filter(m => m !== 'อื่นๆ')
-            .sort((a, b) => a.localeCompare(b, 'th'));
-        if (!this.currentMajors.includes('อื่นๆ')) this.currentMajors.push('อื่นๆ');
-        document.getElementById('compare-majors').innerHTML = this.currentMajors.map((m, i) => `
+            selectGroup(i) {
+                this.selectedGroup = FACULTY_GROUPS[i];
+                this.selectedMajors = new Set();
+                const progs = DB.filter(c => c.group.includes(this.selectedGroup.kw));
+                this.currentMajors = [...new Set(progs.map(c => getCoreMajor(c.program, this.selectedGroup.kw)))]
+                    .filter(m => m !== 'อื่นๆ')
+                    .sort((a, b) => a.localeCompare(b, 'th'));
+                if (!this.currentMajors.includes('อื่นๆ')) this.currentMajors.push('อื่นๆ');
+                document.getElementById('compare-majors').innerHTML = this.currentMajors.map((m, i) => `
         <div class="faculty-group-btn" onclick="compareApp.selectMajor(${i})">
             <div style="font-weight:600; font-size:0.9rem;">${m}</div>
         </div>`).join('');
-        nav('compare-step2');
-    },
+                nav('compare-step2');
+            },
 
-    selectMajor(i) {
-        const major = this.currentMajors[i];
-        this.selectedMajors.add(major);
-        this._loadUnis();
-        nav('compare-step3');
-    },
+            selectMajor(i) {
+                const major = this.currentMajors[i];
+                this.selectedMajors.add(major);
+                this._loadUnis();
+                nav('compare-step3');
+            },
 
-    _loadUnis() {
-        const progs = DB.filter(c =>
-            c.group.includes(this.selectedGroup.kw) &&
-            [...this.selectedMajors].some(m => getCoreMajor(c.program, this.selectedGroup.kw) === m)
-        );
-        const unis = [...new Set(progs.map(c => c.uni))];
-        this.currentUnis = unis.map(uni => ({ uni, progs: progs.filter(p => p.uni === uni) }));
-        this.selectedMajor = [...this.selectedMajors].join(', ');
-        this.renderUnis();
-    },
-    renderUnis() {
-        const wrap = document.getElementById('compare-unis');
-        wrap.innerHTML = `<p class="text-muted" style="margin-bottom:14px;">สาขา: <b>${this.selectedMajor}</b> — เลือกมหาวิทยาลัยเพื่อดูหลักสูตรย่อย</p>
+            _loadUnis() {
+                const progs = DB.filter(c =>
+                    c.group.includes(this.selectedGroup.kw) &&
+                    [...this.selectedMajors].some(m => getCoreMajor(c.program, this.selectedGroup.kw) === m)
+                );
+                const unis = [...new Set(progs.map(c => c.uni))];
+                this.currentUnis = unis.map(uni => ({ uni, progs: progs.filter(p => p.uni === uni) }));
+                this.selectedMajor = [...this.selectedMajors].join(', ');
+                this.renderUnis();
+            },
+            renderUnis() {
+                const wrap = document.getElementById('compare-unis');
+                wrap.innerHTML = `<p class="text-muted" style="margin-bottom:14px;">สาขา: <b>${this.selectedMajor}</b> — เลือกมหาวิทยาลัยเพื่อดูหลักสูตรย่อย</p>
         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">` +
-            this.currentUnis.map((u,i) => {
-               const selectedCount = u.progs.filter(p => this.selectedPrograms.has(p.id)).length;
-               return `
+                    this.currentUnis.map((u, i) => {
+                        const selectedCount = u.progs.filter(p => this.selectedPrograms.has(p.id)).length;
+                        return `
               <div onclick="compareApp.openUniModal(${i})" style="
                   background:var(--card); border:1.5px solid ${selectedCount ? 'var(--primary)' : 'var(--border)'};
                   border-radius:var(--radius); padding:16px; cursor:pointer;
@@ -1079,182 +1841,182 @@ const compareApp = {
                   <div style="font-size:0.75rem; color:var(--muted);">${u.progs.length} หลักสูตร</div>
                   ${selectedCount ? `<span style="background:var(--primary);color:#fff;border-radius:99px;padding:2px 10px;font-size:0.75rem;">เลือกแล้ว ${selectedCount}</span>` : ''}
              </div>`;
-         }).join('') + '</div>';
-    },
-    openUniModal(i) {
-        const u = this.currentUnis[i];
-        this.currentModalProgs = u.progs;
-        document.getElementById('uni-modal-title').innerText = `${u.uni} — ${this.selectedMajor}`;
-        document.getElementById('uni-modal-list').innerHTML = u.progs.map(p => `
+                    }).join('') + '</div>';
+            },
+            openUniModal(i) {
+                const u = this.currentUnis[i];
+                this.currentModalProgs = u.progs;
+                document.getElementById('uni-modal-title').innerText = `${u.uni} — ${this.selectedMajor}`;
+                document.getElementById('uni-modal-list').innerHTML = u.progs.map(p => `
             <label style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); cursor:pointer;">
-                <input type="checkbox" value="${p.id}" ${this.selectedPrograms.has(p.id)?'checked':''} onchange="compareApp.toggleProg('${p.id}')">
+                <input type="checkbox" value="${p.id}" ${this.selectedPrograms.has(p.id) ? 'checked' : ''} onchange="compareApp.toggleProg('${p.id}')">
                 <span>${p.program}</span>
             </label>`).join('') || '<p class="text-muted">ไม่พบหลักสูตรย่อยของมหาวิทยาลัยนี้</p>';
-        document.getElementById('modal-uni-majors').classList.add('show');
-    },
+                document.getElementById('modal-uni-majors').classList.add('show');
+            },
 
-    closeUniModal() {
-        document.getElementById('modal-uni-majors').classList.remove('show');
-        this.renderUnis(); // อัปเดตจำนวนที่เลือกแล้วบนการ์ดมหาลัย (บันทึกอัตโนมัติ)
-    },
+            closeUniModal() {
+                document.getElementById('modal-uni-majors').classList.remove('show');
+                this.renderUnis(); // อัปเดตจำนวนที่เลือกแล้วบนการ์ดมหาลัย (บันทึกอัตโนมัติ)
+            },
 
-    toggleProg(id) {
-        if(this.selectedPrograms.has(id)) this.selectedPrograms.delete(id);
-        else this.selectedPrograms.add(id);
-    },
+            toggleProg(id) {
+                if (this.selectedPrograms.has(id)) this.selectedPrograms.delete(id);
+                else this.selectedPrograms.add(id);
+            },
 
-    addMoreMajor() {
-        // แสดง step2 อีกครั้ง แต่คราวนี้กดแล้วเพิ่มเข้า selectedMajors แทนที่จะ reset
-        document.getElementById('compare-majors').innerHTML = this.currentMajors.map((m, i) => `
+            addMoreMajor() {
+                // แสดง step2 อีกครั้ง แต่คราวนี้กดแล้วเพิ่มเข้า selectedMajors แทนที่จะ reset
+                document.getElementById('compare-majors').innerHTML = this.currentMajors.map((m, i) => `
         <div class="faculty-group-btn ${this.selectedMajors.has(m) ? 'active' : ''}" 
              onclick="compareApp.addMajorAndBack(${i})">
             <div style="font-weight:600; font-size:0.9rem;">${m}</div>
             ${this.selectedMajors.has(m) ? '<div style="font-size:0.75rem;color:var(--primary);">✓ เลือกแล้ว</div>' : ''}
         </div>`).join('');
-        nav('compare-step2');
-    },
+                nav('compare-step2');
+            },
 
-    addMajorAndBack(i) {
-        this.selectedMajors.add(this.currentMajors[i]);
-        this._loadUnis();
-        nav('compare-step3');
-    },
+            addMajorAndBack(i) {
+                this.selectedMajors.add(this.currentMajors[i]);
+                this._loadUnis();
+                nav('compare-step3');
+            },
 
-    // ============================================================
-    // BUILD COMPARISON TABLE (คอลัมน์วิชาแยกของตัวเอง + ปีตามจริง)
-    // ============================================================
-    async buildTable() {
-        if(!this.selectedPrograms.size) { alert('เลือกหลักสูตรก่อนนะ'); return; }
-        const selected = DB.filter(c => this.selectedPrograms.has(c.id));
+            // ============================================================
+            // BUILD COMPARISON TABLE (คอลัมน์วิชาแยกของตัวเอง + ปีตามจริง)
+            // ============================================================
+            async buildTable() {
+                if (!this.selectedPrograms.size) { alert('เลือกหลักสูตรก่อนนะ'); return; }
+                const selected = DB.filter(c => this.selectedPrograms.has(c.id));
 
-        // หาคีย์วิชาทั้งหมดที่ปรากฏในหลักสูตรที่เลือก (เรียงตามลำดับใน SUBJ_MAP)
-        const subjectKeys = Object.keys(SUBJ_MAP).filter(k =>
-            selected.some(c => c.criteria && c.criteria[k] !== undefined && c.criteria[k] !== null && c.criteria[k] !== '')
-        );
+                // หาคีย์วิชาทั้งหมดที่ปรากฏในหลักสูตรที่เลือก (เรียงตามลำดับใน SUBJ_MAP)
+                const subjectKeys = Object.keys(SUBJ_MAP).filter(k =>
+                    selected.some(c => c.criteria && c.criteria[k] !== undefined && c.criteria[k] !== null && c.criteria[k] !== '')
+                );
 
-        const thead = document.getElementById('compare-table-head');
-        thead.innerHTML = `<tr>
+                const thead = document.getElementById('compare-table-head');
+                thead.innerHTML = `<tr>
             <th style="min-width:220px; text-align:left;">คณะ / มหาวิทยาลัย</th>
             <th>Min ปี${YEAR_LAST}</th>
             <th>Min ปี${YEAR_PREV}</th>
             <th class="predict-cell">🔮 ทำนายปี${YEAR_PREDICT}</th>
-            ${subjectKeys.map(k => `<th>${SUBJ_MAP[k]||k}<br><span style="font-weight:400;font-size:0.75rem;">(%)</span></th>`).join('')}
+            ${subjectKeys.map(k => `<th>${SUBJ_MAP[k] || k}<br><span style="font-weight:400;font-size:0.75rem;">(%)</span></th>`).join('')}
             <th>เกณฑ์อื่นๆ</th>
             <th>ลิงก์</th>
         </tr>`;
 
-        const colCount = 6 + subjectKeys.length;
-        const tbody = document.getElementById('compare-table-body');
-        tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;">🔄 กำลังโหลด...</td></tr>`;
-        nav('compare-table');
+                const colCount = 6 + subjectKeys.length;
+                const tbody = document.getElementById('compare-table-body');
+                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;">🔄 กำลังโหลด...</td></tr>`;
+                nav('compare-table');
 
-        const rows = await Promise.all(selected.map(async c => {
-            let pred = '—';
-            try {
-                const r = await fetch(`${AI_URL}/api/predict/${c.id}`);
-                const d = await r.json();
-                if(d.status==='success') pred = d.predicted_score.toFixed(2);
-            } catch(e) {}
+                const rows = await Promise.all(selected.map(async c => {
+                    let pred = '—';
+                    try {
+                        const r = await fetch(`${AI_URL}/api/predict/${c.id}`);
+                        const d = await r.json();
+                        if (d.status === 'success') pred = d.predicted_score.toFixed(2);
+                    } catch (e) { }
 
-            const subjCells = subjectKeys.map(k => {
-                const v = c.criteria ? c.criteria[k] : undefined;
-                return `<td>${(v !== undefined && v !== null && v !== '') ? v+'%' : '—'}</td>`;
-            }).join('');
+                    const subjCells = subjectKeys.map(k => {
+                        const v = c.criteria ? c.criteria[k] : undefined;
+                        return `<td>${(v !== undefined && v !== null && v !== '') ? v + '%' : '—'}</td>`;
+                    }).join('');
 
-            return `<tr>
+                    return `<tr>
                 <td style="text-align:left;">${c.uni}<br><small class="text-muted">${c.program}</small></td>
                 <td>${c.min68 ? c.min68.toFixed(2) : '—'}</td>
                 <td>${c.min67 ? c.min67.toFixed(2) : '—'}</td>
                 <td class="predict-cell">${pred}</td>
                 ${subjCells}
-                <td style="font-size:0.82rem;">GPAX ≥ ${c.gpax_min||'—'}</td>
-                <td><a href="${c.link||'#'}" target="_blank" style="color:var(--primary);">🔗</a></td>
+                <td style="font-size:0.82rem;">GPAX ≥ ${c.gpax_min || '—'}</td>
+                <td><a href="${c.link || '#'}" target="_blank" style="color:var(--primary);">🔗</a></td>
             </tr>`;
-        }));
-        tbody.innerHTML = rows.join('');
-    },
-};
+                }));
+                tbody.innerHTML = rows.join('');
+            },
+        };
 
 
-// ============================================================
-// RANK APP
-// ============================================================
-const rankApp = {
-    currentItems: [],
-    currentScore: null,
+        // ============================================================
+        // RANK APP
+        // ============================================================
+        const rankApp = {
+            currentItems: [],
+            currentScore: null,
 
-    loadDropdowns() {
-        const scores = scoreApp.data;
-        const dreams = dreamApp.data;
-        document.getElementById('rank-score-sel').innerHTML = scores.length
-            ? scores.map((s,i) => `<option value="${i}">${s.name}</option>`).join('')
-            : '<option value="">ยังไม่มีชุดคะแนน</option>';
-        document.getElementById('rank-dream-sel').innerHTML = dreams.length
-            ? dreams.map((d,i) => `<option value="${i}">${d.name}</option>`).join('')
-            : '<option value="">ยังไม่มีชุดคณะ</option>';
-    },
+            loadDropdowns() {
+                const scores = scoreApp.data;
+                const dreams = dreamApp.data;
+                document.getElementById('rank-score-sel').innerHTML = scores.length
+                    ? scores.map((s, i) => `<option value="${i}">${s.name}</option>`).join('')
+                    : '<option value="">ยังไม่มีชุดคะแนน</option>';
+                document.getElementById('rank-dream-sel').innerHTML = dreams.length
+                    ? dreams.map((d, i) => `<option value="${i}">${d.name}</option>`).join('')
+                    : '<option value="">ยังไม่มีชุดคณะ</option>';
+            },
 
-    async analyze() {
-        const si = document.getElementById('rank-score-sel').value;
-        const di = document.getElementById('rank-dream-sel').value;
-        if(si===''||di==='') { alert('เลือกข้อมูลให้ครบก่อนนะ'); return; }
+            async analyze() {
+                const si = document.getElementById('rank-score-sel').value;
+                const di = document.getElementById('rank-dream-sel').value;
+                if (si === '' || di === '') { alert('เลือกข้อมูลให้ครบก่อนนะ'); return; }
 
-        const userScore = scoreApp.data[si];
-        const dream = dreamApp.data[di];
-        this.currentScore = userScore;
+                const userScore = scoreApp.data[si];
+                const dream = dreamApp.data[di];
+                this.currentScore = userScore;
 
-        const cards = document.getElementById('rank-cards');
-        cards.innerHTML = '<div style="text-align:center;padding:40px;"><div class="spinner"></div><p class="text-muted" style="margin-top:12px;">กำลังคำนวณ...</p></div>';
-        nav('rank-result');
+                const cards = document.getElementById('rank-cards');
+                cards.innerHTML = '<div style="text-align:center;padding:40px;"><div class="spinner"></div><p class="text-muted" style="margin-top:12px;">กำลังคำนวณ...</p></div>';
+                nav('rank-result');
 
-        this.currentItems = await Promise.all(dream.items.map(async (fac, i) => {
-            const dbFac = DB.find(c => c.id === fac.id);
-            if(!dbFac) return null;
+                this.currentItems = await Promise.all(dream.items.map(async (fac, i) => {
+                    const dbFac = DB.find(c => c.id === fac.id);
+                    if (!dbFac) return null;
 
-            let finalScore = 0;
-            let missing = [];
-            for(const [key, weight] of Object.entries(dbFac.criteria||{})) {
-                const val = userScore[key];
-                if(val === null || val === undefined) { missing.push(SUBJ_MAP[key]||key); }
-                finalScore += ((val||0) * weight / 100);
-            }
+                    let finalScore = 0;
+                    let missing = [];
+                    for (const [key, weight] of Object.entries(dbFac.criteria || {})) {
+                        const val = userScore[key];
+                        if (val === null || val === undefined) { missing.push(SUBJ_MAP[key] || key); }
+                        finalScore += ((val || 0) * weight / 100);
+                    }
 
-            let pred = null;
-            try {
-                const r = await fetch(`${AI_URL}/api/predict/${fac.id}`);
-                const d = await r.json();
-                if(d.status==='success') pred = d.predicted_score;
-            } catch(e) {}
+                    let pred = null;
+                    try {
+                        const r = await fetch(`${AI_URL}/api/predict/${fac.id}`);
+                        const d = await r.json();
+                        if (d.status === 'success') pred = d.predicted_score;
+                    } catch (e) { }
 
-            return { ...fac, dbFac, finalScore, missing, pred, rank: i+1 };
-        }));
+                    return { ...fac, dbFac, finalScore, missing, pred, rank: i + 1 };
+                }));
 
-        this.currentItems = this.currentItems.filter(Boolean);
-        this.renderCards();
-    },
+                this.currentItems = this.currentItems.filter(Boolean);
+                this.renderCards();
+            },
 
-    getRiskClass(score, min68, pred) {
-        const baseline = pred ?? min68;
-        if(!baseline) return { cls:'risk-2', label:'⚠️ ไม่มีข้อมูล', dot:'#E67E22' };
-        const diff = score - baseline;
-        if(diff >= 8)  return { cls:'risk-5', label:'🟢 โอกาสติดสูงมาก', dot:'#27AE60' };
-        if(diff >= 3)  return { cls:'risk-4', label:'🟩 โอกาสติดสูง', dot:'#8DC85A' };
-        if(diff >= -2) return { cls:'risk-3', label:'🟡 มีโอกาสติด', dot:'#F1C40F' };
-        if(diff >= -6) return { cls:'risk-2', label:'🟠 มีความเสี่ยง', dot:'#E67E22' };
-        return { cls:'risk-1', label:'🔴 เสี่ยงสูงมาก', dot:'#E74C3C' };
-    },
+            getRiskClass(score, min68, pred) {
+                const baseline = pred ?? min68;
+                if (!baseline) return { cls: 'risk-2', label: '⚠️ ไม่มีข้อมูล', dot: '#E67E22' };
+                const diff = score - baseline;
+                if (diff >= 8) return { cls: 'risk-5', label: '🟢 โอกาสติดสูงมาก', dot: '#27AE60' };
+                if (diff >= 3) return { cls: 'risk-4', label: '🟩 โอกาสติดสูง', dot: '#8DC85A' };
+                if (diff >= -2) return { cls: 'risk-3', label: '🟡 มีโอกาสติด', dot: '#F1C40F' };
+                if (diff >= -6) return { cls: 'risk-2', label: '🟠 มีความเสี่ยง', dot: '#E67E22' };
+                return { cls: 'risk-1', label: '🔴 เสี่ยงสูงมาก', dot: '#E74C3C' };
+            },
 
-    renderCards() {
-        const cards = document.getElementById('rank-cards');
-        cards.innerHTML = this.currentItems.map((item, i) => {
-            const risk = this.getRiskClass(item.finalScore, item.dbFac.min68, item.pred);
-            return `
+            renderCards() {
+                const cards = document.getElementById('rank-cards');
+                cards.innerHTML = this.currentItems.map((item, i) => {
+                    const risk = this.getRiskClass(item.finalScore, item.dbFac.min68, item.pred);
+                    return `
             <div class="rank-card" draggable="true" data-idx="${i}"
                 ondragstart="rankApp.dragStart(event,${i})"
                 ondragover="rankApp.dragOver(event)"
                 ondrop="rankApp.drop(event,${i})">
                 <span class="drag-handle" style="font-size:1.5rem; color:var(--muted); cursor:grab;">☰</span>
-                <div class="rank-number">${i+1}</div>
+                <div class="rank-number">${i + 1}</div>
                 <div class="rank-body">
                     <div style="font-weight:700;">${item.uni}</div>
                     <div class="text-muted" style="font-size:0.85rem;">${item.group} — ${item.program}</div>
@@ -1270,198 +2032,200 @@ const rankApp = {
                     <div class="score-predict">🔮 ทำนายปี${YEAR_PREDICT}: ${item.pred ? item.pred.toFixed(2) : '—'}</div>
                 </div>
             </div>`;
-        }).join('');
-    },
+                }).join('');
+            },
 
-    dragIdx: null,
-    dragStart(e,i) { this.dragIdx=i; },
-    dragOver(e) { e.preventDefault(); },
-    drop(e,ti) {
-        e.preventDefault();
-        if(this.dragIdx===null||this.dragIdx===ti) { this.dragIdx=null; return; }
-        const [m] = this.currentItems.splice(this.dragIdx,1);
-        this.currentItems.splice(ti,0,m);
-        this.dragIdx=null;
-        this.renderCards();
-    },
+            dragIdx: null,
+            dragStart(e, i) { this.dragIdx = i; },
+            dragOver(e) { e.preventDefault(); },
+            drop(e, ti) {
+                e.preventDefault();
+                if (this.dragIdx === null || this.dragIdx === ti) { this.dragIdx = null; return; }
+                const [m] = this.currentItems.splice(this.dragIdx, 1);
+                this.currentItems.splice(ti, 0, m);
+                this.dragIdx = null;
+                this.renderCards();
+            },
 
-    openAI() {
-        const top = this.currentItems[0];
-        document.getElementById('modal-ai-rank-text').innerText =
-            `คณะอันดับ 1 ของคุณคือ "${top.uni} — ${top.program}" ใช่คณะในฝันของคุณไหม?`;
-        document.getElementById('modal-ai-rank').classList.add('show');
-    },
+            openAI() {
+                const top = this.currentItems[0];
+                document.getElementById('modal-ai-rank-text').innerText =
+                    `คณะอันดับ 1 ของคุณคือ "${top.uni} — ${top.program}" ใช่คณะในฝันของคุณไหม?`;
+                document.getElementById('modal-ai-rank').classList.add('show');
+            },
 
-    async aiRerank(lockFirst) {
-        document.getElementById('modal-ai-rank').classList.remove('show');
-        const cards = document.getElementById('rank-cards');
-        cards.innerHTML += `<div id="ai-loading" style="text-align:center;padding:24px;">
+            async aiRerank(lockFirst) {
+                document.getElementById('modal-ai-rank').classList.remove('show');
+                const cards = document.getElementById('rank-cards');
+                cards.innerHTML += `<div id="ai-loading" style="text-align:center;padding:24px;">
             <div class="spinner"></div><p class="text-muted" style="margin-top:10px;">AI กำลังวิเคราะห์...</p></div>`;
 
-        const summary = this.currentItems.map((item,i) => ({
-            rank: i+1, uni: item.uni, program: item.program,
-            score: item.finalScore.toFixed(2),
-            min68: item.dbFac.min68, pred: item.pred,
-        }));
+                const summary = this.currentItems.map((item, i) => ({
+                    rank: i + 1, uni: item.uni, program: item.program,
+                    score: item.finalScore.toFixed(2),
+                    min68: item.dbFac.min68, pred: item.pred,
+                }));
 
-        try {
-            const r = await fetch(`${AI_URL}/api/ai-rank`, {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ items: summary, lockFirst }),
-            });
-            const d = await r.json();
-            document.getElementById('ai-loading')?.remove();
-            cards.innerHTML += `
+                try {
+                    const r = await fetch(`${AI_URL}/api/ai-rank`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ items: summary, lockFirst }),
+                    });
+                    const d = await r.json();
+                    document.getElementById('ai-loading')?.remove();
+                    cards.innerHTML += `
                 <div class="section-block" style="margin-top:20px; border-left: 4px solid var(--primary);">
                     <div class="section-title">💡 คำแนะนำจาก AI</div>
                     <div style="white-space: pre-line; line-height:1.8;">${d.advice || 'ไม่สามารถวิเคราะห์ได้ในขณะนี้'}</div>
                 </div>`;
-        } catch(e) {
-            document.getElementById('ai-loading')?.remove();
-            cards.innerHTML += `<div class="section-block" style="margin-top:16px; color:var(--danger);">❌ ไม่สามารถเชื่อมต่อ AI ได้ — ตรวจสอบว่า Python server รันอยู่</div>`;
-        }
-    },
-};
+                } catch (e) {
+                    document.getElementById('ai-loading')?.remove();
+                    cards.innerHTML += `<div class="section-block" style="margin-top:16px; color:var(--danger);">❌ ไม่สามารถเชื่อมต่อ AI ได้ — ตรวจสอบว่า Python server รันอยู่</div>`;
+                }
+            },
+        };
 
-// ============================================================
-// RECOMMEND APP
-// ============================================================
-const MBTI_TYPES = ['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP'];
-const MBTI_CAT = {
-    INTJ:'sci',INTP:'sci',ENTJ:'biz',ENTP:'sci',
-    INFJ:'arts',INFP:'arts',ENFJ:'arts',ENFP:'creative',
-    ISTJ:'biz',ISFJ:'arts',ESTJ:'biz',ESFJ:'arts',
-    ISTP:'sci',ISFP:'creative',ESTP:'biz',ESFP:'creative',
-};
+        // ============================================================
+        // RECOMMEND APP
+        // ============================================================
+        const MBTI_TYPES = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'];
+        const MBTI_CAT = {
+            INTJ: 'sci', INTP: 'sci', ENTJ: 'biz', ENTP: 'sci',
+            INFJ: 'arts', INFP: 'arts', ENFJ: 'arts', ENFP: 'creative',
+            ISTJ: 'biz', ISFJ: 'arts', ESTJ: 'biz', ESFJ: 'arts',
+            ISTP: 'sci', ISFP: 'creative', ESTP: 'biz', ESFP: 'creative',
+        };
 
-const QUIZ_QUESTIONS = [
-    { q:'ฉันชอบทำงานคนเดียวมากกว่าทำงานกับคนอื่น', lo:'ชอบทำงานกลุ่ม', hi:'ชอบทำคนเดียว', key:'solo' },
-    { q:'ฉันรับแรงกดดันได้ดีและชอบงานที่มีกำหนดส่ง', lo:'ไม่ชอบเลย', hi:'ชอบมาก', key:'pressure' },
-    { q:'ฉันชอบคำนวณและคิดเชิงตรรกะมากกว่าท่องจำ', lo:'ชอบท่องจำ', hi:'ชอบคำนวณ', key:'calc' },
-    { q:'ฉันชอบแสดงออก สร้างสรรค์งานศิลปะ หรือออกแบบ', lo:'ไม่ชอบ', hi:'ชอบมาก', key:'creative' },
-    { q:'ฉันอยากทำงานช่วยเหลือผู้อื่นโดยตรง เช่น แพทย์ ครู', lo:'ไม่สนใจ', hi:'สนใจมาก', key:'helper' },
-];
+        const QUIZ_QUESTIONS = [
+            { q: 'ฉันชอบทำงานคนเดียวมากกว่าทำงานกับคนอื่น', lo: 'ชอบทำงานกลุ่ม', hi: 'ชอบทำคนเดียว', key: 'solo' },
+            { q: 'ฉันรับแรงกดดันได้ดีและชอบงานที่มีกำหนดส่ง', lo: 'ไม่ชอบเลย', hi: 'ชอบมาก', key: 'pressure' },
+            { q: 'ฉันชอบคำนวณและคิดเชิงตรรกะมากกว่าท่องจำ', lo: 'ชอบท่องจำ', hi: 'ชอบคำนวณ', key: 'calc' },
+            { q: 'ฉันชอบแสดงออก สร้างสรรค์งานศิลปะ หรือออกแบบ', lo: 'ไม่ชอบ', hi: 'ชอบมาก', key: 'creative' },
+            { q: 'ฉันอยากทำงานช่วยเหลือผู้อื่นโดยตรง เช่น แพทย์ ครู', lo: 'ไม่สนใจ', hi: 'สนใจมาก', key: 'helper' },
+        ];
 
-const recommendApp = {
-    selectedMBTI: null,
-    quizAnswers: {},
-    quizIdx: 0,
+        const recommendApp = {
+            selectedMBTI: null,
+            quizAnswers: {},
+            quizIdx: 0,
 
-    loadDropdowns() {
-        const scores = scoreApp.data;
-        document.getElementById('mbti-score-sel').innerHTML =
-            '<option value="">— ไม่เลือก —</option>' +
-            scores.map((s,i) => `<option value="${i}">${s.name}</option>`).join('');
+            loadDropdowns() {
+                const scores = scoreApp.data;
+                document.getElementById('mbti-score-sel').innerHTML =
+                    '<option value="">— ไม่เลือก —</option>' +
+                    scores.map((s, i) => `<option value="${i}">${s.name}</option>`).join('');
 
-        const grid = document.getElementById('mbti-grid');
-        grid.innerHTML = MBTI_TYPES.map(t => `
+                const grid = document.getElementById('mbti-grid');
+                grid.innerHTML = MBTI_TYPES.map(t => `
             <div class="mbti-btn" onclick="recommendApp.selectMBTI('${t}')">${t}</div>`).join('');
-    },
+            },
 
-    selectMBTI(t) {
-        this.selectedMBTI = t;
-        document.querySelectorAll('.mbti-btn').forEach(b => b.classList.toggle('active', b.innerText===t));
-        document.getElementById('mbti-submit-btn').disabled = false;
-    },
+            selectMBTI(t) {
+                this.selectedMBTI = t;
+                document.querySelectorAll('.mbti-btn').forEach(b => b.classList.toggle('active', b.innerText === t));
+                document.getElementById('mbti-submit-btn').disabled = false;
+            },
 
-    async processMBTI() {
-        const cat = MBTI_CAT[this.selectedMBTI] || 'sci';
-        const si = document.getElementById('mbti-score-sel').value;
-        const score = si !== '' ? scoreApp.data[si] : null;
-        await this.showResults(cat, score, `MBTI: ${this.selectedMBTI}`);
-    },
+            async processMBTI() {
+                const cat = MBTI_CAT[this.selectedMBTI] || 'sci';
+                const si = document.getElementById('mbti-score-sel').value;
+                const score = si !== '' ? scoreApp.data[si] : null;
+                await this.showResults(cat, score, `MBTI: ${this.selectedMBTI}`);
+            },
 
-    startQuiz() {
-        this.quizIdx = 0;
-        this.quizAnswers = {};
-        nav('recommend-quiz');
-        this.showQuestion();
-    },
+            startQuiz() {
+                this.quizIdx = 0;
+                this.quizAnswers = {};
+                nav('recommend-quiz');
+                this.showQuestion();
+            },
 
-    showQuestion() {
-        if(this.quizIdx >= QUIZ_QUESTIONS.length) { this.finishQuiz(); return; }
-        const q = QUIZ_QUESTIONS[this.quizIdx];
-        document.getElementById('quiz-progress').innerHTML =
-            `<div style="font-size:0.88rem; color:var(--muted); margin-bottom:8px;">คำถาม ${this.quizIdx+1} / ${QUIZ_QUESTIONS.length}</div>
+            showQuestion() {
+                if (this.quizIdx >= QUIZ_QUESTIONS.length) { this.finishQuiz(); return; }
+                const q = QUIZ_QUESTIONS[this.quizIdx];
+                document.getElementById('quiz-progress').innerHTML =
+                    `<div style="font-size:0.88rem; color:var(--muted); margin-bottom:8px;">คำถาม ${this.quizIdx + 1} / ${QUIZ_QUESTIONS.length}</div>
              <div style="height:6px; background:var(--border); border-radius:99px; overflow:hidden;">
-               <div style="height:100%; width:${((this.quizIdx)/QUIZ_QUESTIONS.length*100)}%; background:var(--primary); border-radius:99px; transition:0.3s;"></div>
+               <div style="height:100%; width:${((this.quizIdx) / QUIZ_QUESTIONS.length * 100)}%; background:var(--primary); border-radius:99px; transition:0.3s;"></div>
              </div>`;
-        document.getElementById('quiz-question').innerText = q.q;
-        document.getElementById('quiz-input').innerHTML = `
+                document.getElementById('quiz-question').innerText = q.q;
+                document.getElementById('quiz-input').innerHTML = `
             <div class="quiz-slider-wrap">
                 <input type="range" class="quiz-slider" id="q-slider" min="0" max="100" value="50">
                 <div class="slider-labels"><span>${q.lo}</span><span>${q.hi}</span></div>
             </div>
             <button class="btn btn-primary btn-block" onclick="recommendApp.nextQuestion()">ถัดไป →</button>`;
-    },
+            },
 
-    nextQuestion() {
-        const q = QUIZ_QUESTIONS[this.quizIdx];
-        this.quizAnswers[q.key] = parseInt(document.getElementById('q-slider').value);
-        this.quizIdx++;
-        this.showQuestion();
-    },
+            nextQuestion() {
+                const q = QUIZ_QUESTIONS[this.quizIdx];
+                this.quizAnswers[q.key] = parseInt(document.getElementById('q-slider').value);
+                this.quizIdx++;
+                this.showQuestion();
+            },
 
-    finishQuiz() {
-        // วิเคราะห์จากคำตอบ
-        const a = this.quizAnswers;
-        let cat = 'sci';
-        if(a.creative > 60) cat = 'creative';
-        else if(a.helper > 60) cat = 'arts';
-        else if(a.calc > 60) cat = 'sci';
-        else cat = 'biz';
-        document.getElementById('quiz-input').innerHTML = `
+            finishQuiz() {
+                // วิเคราะห์จากคำตอบ
+                const a = this.quizAnswers;
+                let cat = 'sci';
+                if (a.creative > 60) cat = 'creative';
+                else if (a.helper > 60) cat = 'arts';
+                else if (a.calc > 60) cat = 'sci';
+                else cat = 'biz';
+                document.getElementById('quiz-input').innerHTML = `
             <div class="form-group">
                 <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                     <input type="checkbox" id="quiz-use-score"> นำชุดคะแนนมาวิเคราะห์ด้วย
                 </label>
                 <select id="quiz-score-sel" class="form-control" style="margin-top:8px;">
                     <option value="">— ไม่เลือก —</option>
-                    ${scoreApp.data.map((s,i) => `<option value="${i}">${s.name}</option>`).join('')}
+                    ${scoreApp.data.map((s, i) => `<option value="${i}">${s.name}</option>`).join('')}
                 </select>
             </div>
             <button class="btn btn-primary btn-block btn-lg" onclick="recommendApp.finishQuizSubmit('${cat}')">ดูคณะที่แนะนำ →</button>`;
-    },
+            },
 
-    async finishQuizSubmit(cat) {
-        const si = document.getElementById('quiz-score-sel').value;
-        const score = si !== '' ? scoreApp.data[si] : null;
-        await this.showResults(cat, score, 'Lifestyle Quiz');
-    },
+            async finishQuizSubmit(cat) {
+                const si = document.getElementById('quiz-score-sel').value;
+                const score = si !== '' ? scoreApp.data[si] : null;
+                await this.showResults(cat, score, 'Lifestyle Quiz');
+            },
 
-    async showResults(cat, score, source) {
-        const kw = { sci:['วิศว','วิทยาศาสตร์','คอมพิวเตอร์','เทคโนโลยี','แพทย์'],
-                     arts:['อักษร','มนุษยศาสตร์','ศิลปศาสตร์','ครุ','สังคม'],
-                     biz:['บริหาร','บัญชี','เศรษฐศาสตร์','นิติ','การจัดการ'],
-                     creative:['ศิลปกรรม','นิเทศ','สถาปัตย์','มัณฑน','วิจิตร'] }[cat] || [];
+            async showResults(cat, score, source) {
+                const kw = {
+                    sci: ['วิศว', 'วิทยาศาสตร์', 'คอมพิวเตอร์', 'เทคโนโลยี', 'แพทย์'],
+                    arts: ['อักษร', 'มนุษยศาสตร์', 'ศิลปศาสตร์', 'ครุ', 'สังคม'],
+                    biz: ['บริหาร', 'บัญชี', 'เศรษฐศาสตร์', 'นิติ', 'การจัดการ'],
+                    creative: ['ศิลปกรรม', 'นิเทศ', 'สถาปัตย์', 'มัณฑน', 'วิจิตร']
+                }[cat] || [];
 
-        let matches = DB.filter(c => kw.some(k => c.group.includes(k)||c.program.includes(k)));
+                let matches = DB.filter(c => kw.some(k => c.group.includes(k) || c.program.includes(k)));
 
-        // ไม่ซ้ำสาขาหลัก
-        const seen = new Set();
-        matches = matches.filter(c => { if(seen.has(c.group)) return false; seen.add(c.group); return true; }).slice(0,10);
+                // ไม่ซ้ำสาขาหลัก
+                const seen = new Set();
+                matches = matches.filter(c => { if (seen.has(c.group)) return false; seen.add(c.group); return true; }).slice(0, 10);
 
-        const el = document.getElementById('recommend-result-list');
-        el.innerHTML = '<div style="text-align:center;padding:24px;"><div class="spinner"></div></div>';
-        nav('recommend-result');
+                const el = document.getElementById('recommend-result-list');
+                el.innerHTML = '<div style="text-align:center;padding:24px;"><div class="spinner"></div></div>';
+                nav('recommend-result');
 
-        // เรียก AI
-        let aiAdvice = '';
-        try {
-            const r = await fetch(`${AI_URL}/api/ai-recommend`, {
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({ category: cat, source, score: score ? Object.fromEntries(Object.entries(score).filter(([k,v])=>v)) : null }),
-            });
-            const d = await r.json();
-            aiAdvice = d.advice || '';
-        } catch(e) {}
+                // เรียก AI
+                let aiAdvice = '';
+                try {
+                    const r = await fetch(`${AI_URL}/api/ai-recommend`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ category: cat, source, score: score ? Object.fromEntries(Object.entries(score).filter(([k, v]) => v)) : null }),
+                    });
+                    const d = await r.json();
+                    aiAdvice = d.advice || '';
+                } catch (e) { }
 
-        el.innerHTML = (aiAdvice ? `<div class="section-block" style="border-left:4px solid var(--primary);margin-bottom:20px;">
+                el.innerHTML = (aiAdvice ? `<div class="section-block" style="border-left:4px solid var(--primary);margin-bottom:20px;">
             <div class="section-title">🤖 AI วิเคราะห์</div>
             <div style="line-height:1.8;white-space:pre-line;">${aiAdvice}</div></div>` : '') +
-        matches.map(c => `
+                    matches.map(c => `
             <div class="list-item">
                 <div>
                     <div style="font-weight:700;">${c.uni}</div>
@@ -1469,98 +2233,115 @@ const recommendApp = {
                 </div>
                 <button class="btn btn-outline btn-sm" onclick="nav('dream-list')">+ เพิ่มในดวงใจ</button>
             </div>`).join('');
-    },
-};
+            },
+        };
 
-// ============================================================
-// FOCUS APP
-// ============================================================
-const focusApp = {
-    loadDropdowns() {
-        const dreams = dreamApp.data;
-        const scores = scoreApp.data;
-        document.getElementById('focus-dream-sel').innerHTML = dreams.length
-            ? dreams.map((d,i) => `<option value="${i}">${d.name}</option>`).join('')
-            : '<option value="">ยังไม่มีชุดคณะ</option>';
-        document.getElementById('focus-score-sel').innerHTML =
-            '<option value="">— ไม่เลือก —</option>' +
-            scores.map((s,i) => `<option value="${i}">${s.name}</option>`).join('');
-    },
+        // ============================================================
+        // FOCUS APP
+        // ============================================================
+        const focusApp = {
+            loadDropdowns() {
+                const dreams = dreamApp.data;
+                const scores = scoreApp.data;
+                document.getElementById('focus-dream-sel').innerHTML = dreams.length
+                    ? dreams.map((d, i) => `<option value="${i}">${d.name}</option>`).join('')
+                    : '<option value="">ยังไม่มีชุดคณะ</option>';
+                document.getElementById('focus-score-sel').innerHTML =
+                    '<option value="">— ไม่เลือก —</option>' +
+                    scores.map((s, i) => `<option value="${i}">${s.name}</option>`).join('');
+            },
 
-    async analyze() {
-        const di = document.getElementById('focus-dream-sel').value;
-        const si = document.getElementById('focus-score-sel').value;
-        if(di==='') { alert('เลือกชุดคณะก่อนนะ'); return; }
+            async analyze() {
+                const di = document.getElementById('focus-dream-sel').value;
+                const si = document.getElementById('focus-score-sel').value;
+                if (di === '') { alert('เลือกชุดคณะก่อนนะ'); return; }
 
-        const dream = dreamApp.data[di];
-        const score = si !== '' ? scoreApp.data[si] : null;
+                const dream = dreamApp.data[di];
+                const score = si !== '' ? scoreApp.data[si] : null;
 
-        // รวมน้ำหนักวิชาจากทุกคณะ
-        let weightSum = {};
-        dream.items.forEach(fac => {
-            const dbFac = DB.find(c => c.id === fac.id);
-            if(!dbFac) return;
-            for(const [k, w] of Object.entries(dbFac.criteria||{})) {
-                weightSum[k] = (weightSum[k]||0) + parseFloat(w);
-            }
-        });
+                // รวมน้ำหนักวิชาจากทุกคณะ
+                let weightSum = {};
+                dream.items.forEach(fac => {
+                    const dbFac = DB.find(c => c.id === fac.id);
+                    if (!dbFac) return;
+                    for (const [k, w] of Object.entries(dbFac.criteria || {})) {
+                        weightSum[k] = (weightSum[k] || 0) + parseFloat(w);
+                    }
+                });
 
-        const sorted = Object.entries(weightSum).sort((a,b) => b[1]-a[1]).slice(0,8);
-        const bars = document.getElementById('focus-bars');
-        bars.innerHTML = sorted.map(([k, total], i) => {
-            const avg = total / dream.items.length;
-            const cur = score ? (score[k] || 0) : null;
-            const target = 80;
-            const curW = cur !== null ? Math.min(100, cur) : null;
-            return `
+                const sorted = Object.entries(weightSum).sort((a, b) => b[1] - a[1]).slice(0, 8);
+                const bars = document.getElementById('focus-bars');
+                bars.innerHTML = sorted.map(([k, total], i) => {
+                    const avg = total / dream.items.length;
+                    const cur = score ? (score[k] || 0) : null;
+                    const target = 80;
+                    const curW = cur !== null ? Math.min(100, cur) : null;
+                    return `
             <div class="bar-wrap">
                 <div class="bar-label">
-                    <span style="color:${i<2?'var(--danger)':'var(--text)'};">${i+1}. ${SUBJ_MAP[k]||k}</span>
+                    <span style="color:${i < 2 ? 'var(--danger)' : 'var(--text)'};">${i + 1}. ${SUBJ_MAP[k] || k}</span>
                     <span class="text-muted">น้ำหนักเฉลี่ย ${avg.toFixed(1)}%</span>
                 </div>
                 <div class="bar-track">
                     ${cur !== null
-                        ? `<div class="bar-current" style="width:${curW}%;"></div>
+                            ? `<div class="bar-current" style="width:${curW}%;"></div>
                            <div class="bar-target" style="left:${target}%;"></div>`
-                        : `<div class="bar-current" style="width:${avg*1.2}%; background:var(--brown-300);"></div>`}
+                            : `<div class="bar-current" style="width:${avg * 1.2}%; background:var(--brown-300);"></div>`}
                 </div>
                 ${cur !== null ? `<div class="text-muted" style="font-size:0.8rem;margin-top:4px;">คะแนนของคุณ: ${cur} | เป้า: ${target}</div>` : ''}
             </div>`;
-        }).join('');
+                }).join('');
 
-        // เรียก AI วิเคราะห์
-        const aiWrap = document.getElementById('focus-ai-wrap');
-        if(score) {
-            aiWrap.innerHTML = '<div style="text-align:center;"><div class="spinner"></div><p class="text-muted" style="margin-top:10px;">AI กำลังวิเคราะห์...</p></div>';
-            try {
-                const r = await fetch(`${AI_URL}/api/ai-focus`, {
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify({
-                        subjects: sorted.map(([k,w]) => ({ key:k, name:SUBJ_MAP[k]||k, weight:w/dream.items.length, score: score[k]||0 })),
-                        dreamName: dream.name,
-                    }),
-                });
-                const d = await r.json();
-                aiWrap.innerHTML = `<div class="section-block" style="border-left:4px solid var(--primary);">
+                // เรียก AI วิเคราะห์ผ่าน Anthropic API โดยตรง
+                const aiWrap = document.getElementById('focus-ai-wrap');
+                if (score) {
+                    aiWrap.innerHTML = '<div style="text-align:center;"><div class="spinner"></div><p class="text-muted" style="margin-top:10px;">AI กำลังวิเคราะห์...</p></div>';
+                    try {
+                        const subjectList = sorted.map(([k, w]) => ({
+                            key: k,
+                            name: SUBJ_MAP[k] || k,
+                            weight: (w / dream.items.length).toFixed(1),
+                            score: score[k] || 0
+                        }));
+                        const subj_text = subjectList.map(s =>
+                            `- ${s.name}: น้ำหนักเฉลี่ย ${s.weight}% | คะแนนของน้อง: ${s.score}`
+                        ).join('\n');
+
+                        const r = await fetch('https://api.anthropic.com/v1/messages', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                model: 'claude-sonnet-4-6',
+                                max_tokens: 1000,
+                                system: 'คุณเป็นที่ปรึกษาเตรียมสอบ TCAS ตอบภาษาไทย แบ่งเป็นข้อ ๆ กระชับ',
+                                messages: [{
+                                    role: 'user',
+                                    content: `ชุดคณะ: ${dream.name}\nวิชาสำคัญ (เรียงจากน้ำหนักมากไปน้อย):\n${subj_text}\n\nแนะนำวิชาที่ควรโฟกัสเพิ่มเติม และบอกว่าน้องควรพัฒนาจุดไหนก่อน`
+                                }]
+                            })
+                        });
+                        const d = await r.json();
+                        const advice = d.content?.find(b => b.type === 'text')?.text || 'ไม่สามารถวิเคราะห์ได้';
+                        aiWrap.innerHTML = `<div class="section-block" style="border-left:4px solid var(--primary);">
                     <div class="section-title">🤖 AI แนะนำ</div>
-                    <div style="line-height:1.8;white-space:pre-line;">${d.advice||'ไม่สามารถวิเคราะห์ได้'}</div></div>`;
-            } catch(e) {
-                aiWrap.innerHTML = `<div class="text-muted" style="text-align:center;">❌ ไม่สามารถเชื่อมต่อ AI ได้</div>`;
-            }
-        } else {
-            aiWrap.innerHTML = '';
-        }
+                    <div style="line-height:1.8;white-space:pre-line;">${advice}</div></div>`;
+                    } catch (e) {
+                        aiWrap.innerHTML = `<div class="text-muted" style="text-align:center;">❌ ไม่สามารถเชื่อมต่อ AI ได้</div>`;
+                    }
+                } else {
+                    aiWrap.innerHTML = '';
+                }
 
-        nav('focus-result');
-    },
-};
+                nav('focus-result');
+            },
+        };
 
-// ============================================================
-// INIT
-// ============================================================
-compareApp.init();
-initDB();
-</script>
+        // ============================================================
+        // INIT
+        // ============================================================
+        compareApp.init();
+        initDB();
+    </script>
 </body>
+
 </html>
