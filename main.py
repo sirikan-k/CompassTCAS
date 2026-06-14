@@ -390,7 +390,23 @@ def predict_min_score(program_id: str) -> Optional[float]:
 
 @app.get("/api/database")
 def get_database():
-    return tcas_main_df.fillna("").to_dict(orient='records')
+    result = []
+    for _, row in tcas_main_df.iterrows():
+        import ast
+        try:
+            criteria = ast.literal_eval(str(row.get("scores_criteria", "{}")))
+        except:
+            criteria = {}
+        result.append({
+            "id": str(row.get("program_id","")),
+            "uni": str(row.get("university_name","")),
+            "group": str(row.get("faculty_name","")),
+            "program": str(row.get("program_name","")),
+            "gpax_min": float(row.get("min_gpax") or 0),
+            "criteria": criteria,
+            "link": str(row.get("link","#")),
+        })
+    return result
 
 @app.get("/api/search")
 def search(q: str = ""):
@@ -402,7 +418,12 @@ def search(q: str = ""):
         if (q_lower in str(row.get("university_name","")).lower() or
             q_lower in str(row.get("program_name","")).lower() or
             q_lower in str(row.get("faculty_name","")).lower()):
-            results.append(row.fillna("").to_dict())
+            results.append({
+                "id": str(row.get("program_id","")),
+                "uni": str(row.get("university_name","")),
+                "group": str(row.get("faculty_name","")),
+                "program": str(row.get("program_name","")),
+            })
         if len(results) >= 50:
             break
     return results
