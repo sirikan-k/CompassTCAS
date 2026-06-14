@@ -402,29 +402,36 @@
 </div></div>
 
 <!-- ======= COMPARE: STEP 2 ======= -->
-<div id="page-compare-step2" class="page"><div class="container">
-    <button class="btn-back" onclick="nav('compare-step1')">← กลับ</button>
-    <button class="btn-back" style="float:right;" onclick="nav('home')">🏠 หน้าหลัก</button>
-    <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
-    <p class="text-muted" style="margin-bottom:8px;">ขั้นตอน 2/3 — เลือกสาขาหลัก <span style="color:var(--primary);font-weight:700;">(เลือกได้หลายสาขา)</span></p>
-    <div id="compare-majors" style="display:grid; grid-template-columns: repeat(3,1fr); gap:12px;"></div>
-    <button id="compare-step2-next" class="btn btn-primary btn-lg btn-block" style="margin-top:20px; display:none;" onclick="compareApp.confirmMajors()">ดูหลักสูตร →</button>
-</div></div>
+<div id="page-compare-step2" class="page">
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <button class="btn-back" style="margin:0;" onclick="nav('compare-step1')">← กลับ</button>
+            <button class="btn-back" style="margin:0;" onclick="nav('home')">🏠 หน้าหลัก</button>
+        </div>
+        <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
+        <p class="text-muted" style="margin-bottom:16px;">ขั้นตอน 2/3 — เลือกสาขา</p>
+        <div id="compare-majors" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
+    </div>
+</div>
 
 <!-- ======= COMPARE: STEP 3 ======= -->
-<div id="page-compare-step3" class="page"><div class="container">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-        <button class="btn-back" style="margin:0;" onclick="nav('compare-step2')">← เปลี่ยนสาขา</button>
-        <button class="btn-back" style="margin:0;" onclick="nav('home')">🏠 หน้าหลัก</button>
+<div id="page-compare-step3" class="page">
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <button class="btn-back" style="margin:0;" onclick="nav('compare-step1')">← เปลี่ยนกลุ่ม</button>
+            <button class="btn-back" style="margin:0;" onclick="nav('home')">🏠 หน้าหลัก</button>
+        </div>
+        <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
+        <p class="text-muted" style="margin-bottom:16px;">ขั้นตอน 3/3 — เลือกหลักสูตรที่สนใจ</p>
+        <div id="compare-unis"></div>
+        <div style="margin-top:24px; display:flex; gap:12px;">
+            <button class="btn btn-outline btn-lg" style="flex:1;" onclick="compareApp.addMoreMajor()">+
+                เพิ่มสาขาอื่น</button>
+            <button class="btn btn-primary btn-lg" style="flex:2;"
+                onclick="compareApp.buildTable()">สร้างตารางเปรียบเทียบ →</button>
+        </div>
     </div>
-    <h2 style="margin-bottom:6px;">📋 ตารางเปรียบเทียบเกณฑ์</h2>
-    <p class="text-muted" style="margin-bottom:16px;">ขั้นตอน 3/3 — เลือกหลักสูตรที่สนใจ</p>
-    <div id="compare-unis"></div>
-    <div style="margin-top:24px; display:flex; gap:12px;">
-        <button class="btn btn-outline btn-lg" style="flex:1;" onclick="nav('compare-step2')">+ เพิ่มสาขาอื่น</button>
-        <button class="btn btn-primary btn-lg" style="flex:2;" onclick="compareApp.buildTable()">สร้างตารางเปรียบเทียบ →</button>
-    </div>
-</div></div>
+</div>
 
 <!-- ======= COMPARE: TABLE ======= -->
 <div id="page-compare-table" class="page"><div class="container" style="max-width:1100px;">
@@ -1019,47 +1026,40 @@ const compareApp = {
             </div>`).join('');
     },
 
-    selectedMajors: new Set(),  // เพิ่มบรรทัดนี้ใน compareApp object ด้านบน
+    selectedMajors: new Set(), 
 
     selectGroup(i) {
         this.selectedGroup = FACULTY_GROUPS[i];
-        this.selectedMajors = new Set(); // reset เมื่อเปลี่ยนกลุ่ม
+        this.selectedMajors = new Set();
         const progs = DB.filter(c => c.group.includes(this.selectedGroup.kw));
-        this.currentMajors = [...new Set(progs.map(c => getCoreMajor(c.program, this.selectedGroup.kw)))].sort((a,b)=>a.localeCompare(b,'th'));
-        document.getElementById('compare-majors').innerHTML = this.currentMajors.map((m,i) => `
-          <div class="faculty-group-btn" id="major-btn-${i}" onclick="compareApp.toggleMajor(${i})">
-              <div style="font-weight:600; font-size:0.9rem;">${m}</div>
-          </div>`).join('');
-     document.getElementById('compare-step2-next').style.display = 'none';
-     nav('compare-step2');
+        this.currentMajors = [...new Set(progs.map(c => getCoreMajor(c.program, this.selectedGroup.kw)))]
+            .filter(m => m !== 'อื่นๆ')
+            .sort((a, b) => a.localeCompare(b, 'th'));
+        if (!this.currentMajors.includes('อื่นๆ')) this.currentMajors.push('อื่นๆ');
+        document.getElementById('compare-majors').innerHTML = this.currentMajors.map((m, i) => `
+        <div class="faculty-group-btn" onclick="compareApp.selectMajor(${i})">
+            <div style="font-weight:600; font-size:0.9rem;">${m}</div>
+        </div>`).join('');
+        nav('compare-step2');
     },
 
-    toggleMajor(i) {
-       const m = this.currentMajors[i];
-       const btn = document.getElementById(`major-btn-${i}`);
-       if(this.selectedMajors.has(m)) {
-           this.selectedMajors.delete(m);
-           btn.classList.remove('active');
-       } else {
-           this.selectedMajors.add(m);
-           btn.classList.add('active');
-       }
-       document.getElementById('compare-step2-next').style.display = this.selectedMajors.size > 0 ? 'block' : 'none';
+    selectMajor(i) {
+        const major = this.currentMajors[i];
+        this.selectedMajors.add(major);
+        this._loadUnis();
+        nav('compare-step3');
     },
 
-    confirmMajors() {
-        this.selectedPrograms.clear();
-      const progs = DB.filter(c =>
-         c.group.includes(this.selectedGroup.kw) &&
-         [...this.selectedMajors].some(m => getCoreMajor(c.program, this.selectedGroup.kw) === m)
-      );
-       const unis = [...new Set(progs.map(c => c.uni))];
-      this.currentUnis = unis.map(uni => ({ uni, progs: progs.filter(p => p.uni === uni) }));
-      this.selectedMajor = [...this.selectedMajors].join(', ');
-      this.renderUnis();
-       nav('compare-step3');
+    _loadUnis() {
+        const progs = DB.filter(c =>
+            c.group.includes(this.selectedGroup.kw) &&
+            [...this.selectedMajors].some(m => getCoreMajor(c.program, this.selectedGroup.kw) === m)
+        );
+        const unis = [...new Set(progs.map(c => c.uni))];
+        this.currentUnis = unis.map(uni => ({ uni, progs: progs.filter(p => p.uni === uni) }));
+        this.selectedMajor = [...this.selectedMajors].join(', ');
+        this.renderUnis();
     },
-
     renderUnis() {
         const wrap = document.getElementById('compare-unis');
         wrap.innerHTML = `<p class="text-muted" style="margin-bottom:14px;">สาขา: <b>${this.selectedMajor}</b> — เลือกมหาวิทยาลัยเพื่อดูหลักสูตรย่อย</p>
@@ -1101,6 +1101,23 @@ const compareApp = {
     toggleProg(id) {
         if(this.selectedPrograms.has(id)) this.selectedPrograms.delete(id);
         else this.selectedPrograms.add(id);
+    },
+
+    addMoreMajor() {
+        // แสดง step2 อีกครั้ง แต่คราวนี้กดแล้วเพิ่มเข้า selectedMajors แทนที่จะ reset
+        document.getElementById('compare-majors').innerHTML = this.currentMajors.map((m, i) => `
+        <div class="faculty-group-btn ${this.selectedMajors.has(m) ? 'active' : ''}" 
+             onclick="compareApp.addMajorAndBack(${i})">
+            <div style="font-weight:600; font-size:0.9rem;">${m}</div>
+            ${this.selectedMajors.has(m) ? '<div style="font-size:0.75rem;color:var(--primary);">✓ เลือกแล้ว</div>' : ''}
+        </div>`).join('');
+        nav('compare-step2');
+    },
+
+    addMajorAndBack(i) {
+        this.selectedMajors.add(this.currentMajors[i]);
+        this._loadUnis();
+        nav('compare-step3');
     },
 
     // ============================================================
