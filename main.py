@@ -390,21 +390,34 @@ def predict_min_score(program_id: str) -> Optional[float]:
 
 @app.get("/api/database")
 def get_database():
+    # สร้าง lookup คะแนนต่ำสุดแต่ละปี จาก df_agg
+    min_by_year = {}
+    for year in [65, 66, 67, 68]:
+        year_df = df_agg[df_agg['year'] == year]
+        min_by_year[year] = dict(zip(
+            year_df['program_id'],
+            year_df['min_pct']
+        ))
+
     result = []
     for _, row in tcas_main_df.iterrows():
-        import ast
         try:
             criteria = ast.literal_eval(str(row.get("scores_criteria", "{}")))
         except:
             criteria = {}
+        pid = str(row.get("program_id", ""))
         result.append({
-            "id": str(row.get("program_id","")),
-            "uni": str(row.get("university_name","")),
-            "group": str(row.get("faculty_name","")),
-            "program": str(row.get("program_name","")),
+            "id": pid,
+            "uni": str(row.get("university_name", "")),
+            "group": str(row.get("faculty_name", "")),
+            "program": str(row.get("program_name", "")),
             "gpax_min": float(row.get("min_gpax") or 0),
+            "min65": min_by_year[65].get(pid),
+            "min66": min_by_year[66].get(pid),
+            "min67": min_by_year[67].get(pid),
+            "min68": min_by_year[68].get(pid),
             "criteria": criteria,
-            "link": str(row.get("link","#")),
+            "link": str(row.get("link", "#")),
         })
     return result
 
