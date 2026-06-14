@@ -688,11 +688,9 @@ const MAJOR_CATEGORIES = {
     ],
 };
 
-// ตัดวงเล็บ/ส่วนต่อท้ายหลัง , และตัดคำนำหน้าวุฒิ (เช่น วท.บ., วศ.บ.) ออก ใช้เป็น fallback
 function cleanProgramName(programName) {
     if(!programName) return 'อื่นๆ';
     let s = programName.replace(/\(.*?\)/g, '').split(',')[0];
-    s = s.replace(/^[ก-ฮ]{1,3}(\.[ก-ฮ]{1,3})+\.?\s*/, '');
     s = s.trim();
     return s || 'อื่นๆ';
 }
