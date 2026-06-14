@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import pandas as pd
 import numpy as np
-import os, ast, json
+import os, ast
 from sklearn.linear_model import LinearRegression
 import anthropic
 
@@ -40,17 +40,17 @@ def find_file(filename):
     return None
 
 # ------------------------------------------------------------------
-# 1A. โหลด Excel ปี 65-68 → สร้างข้อมูลสำหรับ ML และ Frontend
+# 1A. โหลด Excel ปี 65-68 → สร้าง df_agg เหมือน notebook
+#     key สำคัญ: (program_id, criteria) โดย criteria = คอลัมน์ "รายละเอียด"
 # ------------------------------------------------------------------
 all_data = []
-min_lookup_raw = {65: {}, 66: {}, 67: {}, 68: {}} # เก็บคะแนนดิบให้หน้าเว็บ Frontend
 
 YEAR_CONFIG = {
     65: {
         'file':    'TCAS65_maxmin.xlsx',
-        'id_col':  'program_id',
-        'min_col': None,
-        'det_col': 'project_name_th',
+        'id_col':  'program_id',          # ชื่อคอลัมน์ program_id ในไฟล์ปี 65
+        'min_col': None,                   # จะ handle ด้านล่าง
+        'det_col': 'project_name_th',     # คอลัมน์ "รายละเอียด" ปี 65
         'app_col': 'สมัคร',
         'acc_col': 'รับ',
         'fac_col': 'program_lookup_programs.faculty_name_th',
@@ -97,26 +97,32 @@ for year, cfg in YEAR_CONFIG.items():
     df = pd.read_excel(fpath)
     df['year'] = year
 
+    # จัดการคอลัมน์คะแนนต่ำสุดตามปี
     if year == 65:
-        df['คะแนนต่ำสุด'] = df['คะแนนต่ำสุด หลังประมวลผลรอบ 2'].fillna(df.get('คะแนนต่ำสุด'))
+        df['คะแนนต่ำสุด'] = df['คะแนนต่ำสุด หลังประมวลผลรอบ 2'].fillna(df['คะแนนต่ำสุด'])
         df['รหัสหลักสูตร'] = df['program_id']
     elif year == 67:
-        df['คะแนนต่ำสุด'] = df['คะแนนต่ำสุด หลังประมวลผลรอบ 2'].fillna(df.get('คะแนนต่ำสุด'))
+        df['คะแนนต่ำสุด'] = df['คะแนนต่ำสุด หลังประมวลผลรอบ 2'].fillna(df['คะแนนต่ำสุด'])
     elif year == 68:
-        df['คะแนนต่ำสุด'] = df['คะแนนต่ำสุด ประมวลผลครั้งที่ 2'].fillna(df.get('คะแนนต่ำสุด ประมวลผลครั้งที่ 1'))
+        df['คะแนนต่ำสุด'] = df['คะแนนต่ำสุด ประมวลผลครั้งที่ 2'].fillna(df['คะแนนต่ำสุด ประมวลผลครั้งที่ 1'])
 
     df['min_pct'] = df['คะแนนต่ำสุด'] / MAX_NEW * 100
+
+    # ทำความสะอาด program_id
     df['รหัสหลักสูตร'] = df[cfg['id_col']].astype(str).str.strip()
 
-    # ดึงคะแนนดิบเก็บไว้ให้หน้าเว็บ (แทนที่ฝั่ง server.js)
-    for p, m in zip(df['รหัสหลักสูตร'], df['คะแนนต่ำสุด']):
-        if pd.notna(m) and float(m) > 0:
-            min_lookup_raw[year][str(p).strip()] = float(m)
-
+    # รายละเอียด (criteria ใน notebook) — แทน '0' ด้วย NaN เหมือน notebook
     det_col = cfg['det_col']
-    df['criteria'] = df[det_col].replace('0', np.nan) if det_col in df.columns else np.nan
+    if det_col in df.columns:
+        df['criteria'] = df[det_col].replace('0', np.nan)
+    else:
+        df['criteria'] = np.nan
+
+    # faculty / institution
     fac = df[cfg['fac_col']] if cfg['fac_col'] in df.columns else np.nan
     ins = df[cfg['ins_col']] if cfg['ins_col'] in df.columns else np.nan
+
+    # applied / accepted
     app_s = pd.to_numeric(df[cfg['app_col']], errors='coerce') if cfg['app_col'] in df.columns else np.nan
     acc_s = pd.to_numeric(df[cfg['acc_col']], errors='coerce') if cfg['acc_col'] in df.columns else np.nan
 
@@ -131,10 +137,13 @@ for year, cfg in YEAR_CONFIG.items():
         'year':        year,
     })
     all_data.append(chunk)
+    print(f"✅ โหลดปี {year}: {len(chunk)} แถว")
 
 df_main = pd.concat(all_data, ignore_index=True)
 df_main = df_main[(df_main['min_pct'] > 0)].dropna(subset=['min_pct', 'program_id'])
+print(f"📦 รวมทั้งหมด: {len(df_main)} แถว, {df_main['program_id'].nunique()} หลักสูตร")
 
+# สร้าง comp_rate แล้ว aggregate ด้วย (program_id, year, criteria) เหมือน notebook
 df_main['applied']   = pd.to_numeric(df_main['applied'],  errors='coerce')
 df_main['accepted']  = pd.to_numeric(df_main['accepted'], errors='coerce')
 df_main['comp_rate'] = df_main['applied'] / df_main['accepted'].replace(0, np.nan)
@@ -146,180 +155,261 @@ df_agg = df_main.groupby(['program_id', 'year', 'criteria'], dropna=False).agg(
     comp_rate   = ('comp_rate',  'mean'),
 ).reset_index()
 
-df_agg_temp = df_agg.copy()
-df_agg_temp['criteria_fill'] = df_agg_temp['criteria'].fillna(NAN_PLACEHOLDER)
-pivot_min = df_agg_temp.pivot_table(index=['program_id', 'criteria_fill'], columns='year', values='min_pct')
+print(f"📊 df_agg: {len(df_agg)} แถว, {df_agg['program_id'].nunique()} หลักสูตร")
 
 # ------------------------------------------------------------------
-# 1C. โหลด CSV หลัก และสร้างฐานข้อมูลส่งหน้าเว็บแบบ Node.js
+# 1B. Pivot สำหรับ lookup คะแนนและ comp_rate
+#     index = (program_id, criteria_with_placeholder)
+# ------------------------------------------------------------------
+df_agg_temp = df_agg.copy()
+df_agg_temp['criteria_fill'] = df_agg_temp['criteria'].fillna(NAN_PLACEHOLDER)
+
+# pivot คะแนนต่ำสุดแยกตาม (program_id, criteria)
+pivot_min = df_agg_temp.pivot_table(
+    index=['program_id', 'criteria_fill'],
+    columns='year',
+    values='min_pct',
+)
+
+# pivot comp_rate
+pivot_comp = df_agg_temp.pivot_table(
+    index=['program_id', 'criteria_fill'],
+    columns='year',
+    values='comp_rate',
+)
+
+print(f"🗂️ pivot_min: {len(pivot_min)} คู่ (program_id, criteria)")
+
+# ------------------------------------------------------------------
+# 1C. โหลด CSV หลัก → criteria_lookup (program_id → score weights)
+#     ใช้สำหรับคำนวณ exam_score
 # ------------------------------------------------------------------
 csv_path = find_file('tcas_round3_full_data.csv')
 if csv_path is None:
     raise FileNotFoundError("❌ ไม่พบ tcas_round3_full_data.csv")
 
 tcas_main_df = safe_read_csv(csv_path)
-tcas_main_df.columns = tcas_main_df.columns.str.strip()
-
-# แปลงทุกคอลัมน์ที่สำคัญให้เป็น String และจัดการค่าว่าง เพื่อป้องกัน Frontend พัง (.split)
 tcas_main_df['program_id'] = tcas_main_df['program_id'].astype(str).str.strip()
-tcas_main_df['university_name'] = tcas_main_df['university_name'].fillna("").astype(str).str.strip()
-tcas_main_df['faculty_name'] = tcas_main_df['faculty_name'].fillna("").astype(str).str.strip()
-tcas_main_df['program_name'] = tcas_main_df['program_name'].fillna("").astype(str).str.strip()
-tcas_main_df['link'] = tcas_main_df['link'].fillna("#").astype(str).str.strip()
 
 def parse_criteria_weights(x):
-    if pd.isna(x) or not str(x).strip(): return {}
-    try: return ast.literal_eval(str(x))
-    except: return {}
+    """แปลง "{'tgat': 20, 'tpat3': 30}" → {'tgat': 20, 'tpat3': 30}"""
+    if pd.isna(x):
+        return {}
+    try:
+        return ast.literal_eval(str(x))
+    except:
+        return {}
 
 tcas_main_df['criteria_dict'] = tcas_main_df['scores_criteria'].apply(parse_criteria_weights)
 criteria_lookup = dict(zip(tcas_main_df['program_id'], tcas_main_df['criteria_dict']))
-
-# สร้างฐานข้อมูลสำหรับหน้าเว็บ (tcasDatabase) แบบรัดกุม 100%
-tcas_database_frontend = []
-for _, row in tcas_main_df.iterrows():
-    pid = str(row.get('program_id', '')).strip()
-    if not pid or pid == 'nan' or pid == "": continue
-    
-    crit_str = str(row.get('scores_criteria', '{}')).replace("'", '"')
-    try: criteria = json.loads(crit_str)
-    except: criteria = {}
-        
-    try: gpax = float(row.get('min_gpax', 0))
-    except: gpax = 0.0
-        
-    tcas_database_frontend.append({
-        "id": pid,
-        "uni": str(row.get('university_name', '')),
-        "group": str(row.get('faculty_name', '')),
-        "program": str(row.get('program_name', '')),
-        "gpax_min": gpax if pd.notna(gpax) else 0.0,
-        "min65": min_lookup_raw[65].get(pid, None),
-        "min66": min_lookup_raw[66].get(pid, None),
-        "min67": min_lookup_raw[67].get(pid, None),
-        "min68": min_lookup_raw[68].get(pid, None),
-        "criteria": criteria,
-        "link": str(row.get('link', '#'))
-    })
-print(f"🟢 สร้างฐานข้อมูล Frontend เสร็จ! ทั้งหมด {len(tcas_database_frontend)} หลักสูตร")
+print(f"✅ โหลด CSV หลัก: {len(tcas_main_df)} หลักสูตร")
 
 # ------------------------------------------------------------------
 # 1D. โหลดสถิติข้อสอบ A-Level + TGAT/TPAT
+#     exam_stats[year][subject_key] = mean
 # ------------------------------------------------------------------
-CODE_MAP = {90:'tgat', 91:'tgat1', 92:'tgat2', 93:'tgat3', 20:'tpat2', 30:'tpat3', 40:'tpat4', 50:'tpat5'}
+CODE_MAP = {
+    90:'tgat', 91:'tgat1', 92:'tgat2', 93:'tgat3',
+    20:'tpat2', 30:'tpat3', 40:'tpat4', 50:'tpat5',
+}
+
 def code_to_key(c):
     if c in CODE_MAP: return CODE_MAP[c]
     if 61 <= c <= 89: return f'a_lv_{c}'
     return None
 
 exam_rows = []
-for fname, code_col, mean_col in [('alevel.xlsx', 'รหัส', 'เฉลี่ย (Mean)'), ('Tgat-Tpat.xlsx', 'รหัสวิชา', 'เฉลี่ย (Mean)')]:
+for fname, code_col, mean_col in [
+    ('alevel.xlsx',    'รหัส',     'เฉลี่ย (Mean)'),
+    ('Tgat-Tpat.xlsx', 'รหัสวิชา', 'เฉลี่ย (Mean)'),
+]:
     fpath = find_file(fname)
-    if not fpath: continue
-    df_ex = pd.read_excel(fpath)
-    for _, row in df_ex.iterrows():
-        yr   = int(row['ปี']) - 2500
+    if not fpath:
+        continue
+    df = pd.read_excel(fpath)
+    for _, row in df.iterrows():
+        yr   = int(row['ปี']) - 2500        # 2566 → 66
         code = int(row[code_col])
         key  = code_to_key(code)
         mean = pd.to_numeric(row.get(mean_col, row.get('เฉลี่ย')), errors='coerce')
         if key and pd.notna(mean):
             exam_rows.append({'year': yr, 'key': key, 'mean': float(mean)})
+    print(f"✅ โหลด {fname}")
 
 df_exam = pd.DataFrame(exam_rows)
-exam_feature_means = df_exam.groupby('key')['mean'].mean().to_dict() if not df_exam.empty else {}
-exam_pivot = df_exam.pivot_table(index='year', columns='key', values='mean') if not df_exam.empty else pd.DataFrame()
+# ค่าเฉลี่ยรวมทุกปี ใช้ fallback ถ้าปีนั้นไม่มีข้อมูล
+exam_feature_means = df_exam.groupby('key')['mean'].mean().to_dict()
+# pivot: year × key → mean
+exam_pivot = df_exam.pivot_table(index='year', columns='key', values='mean')
+print(f"📊 exam_stats ปีที่มี: {sorted(df_exam['year'].unique())}")
 
 
 # =====================================================================
-# ส่วนที่ 2: ฟังก์ชันโมเดลทำนายคะแนน (เดิม ไม่แก้ไข)
+# ส่วนที่ 2: ฟังก์ชันโมเดลทำนายคะแนน (Strict Mode เฉพาะเจาะจงรายคณะและเกณฑ์)
 # =====================================================================
+
 def weighted_exam_score(program_id: str, year: int) -> float:
+    """
+    คำนวณ exam_score ถ่วงน้ำหนักเฉพาะของคณะนั้น ปีนั้น
+    เหมือน weighted_exam_features() ใน notebook
+
+    ตัวอย่าง: วิศวะจุฬา criteria = {tgat:20, tpat3:40, a_lv_61:20, a_lv_64:20}
+    exam_score = (mean_tgat×20 + mean_tpat3×40 + mean_alv61×20 + mean_alv64×20) / 100
+    """
     weights = criteria_lookup.get(program_id, {})
-    if not weights: return np.nan
+    if not weights:
+        return np.nan
+
+    # ดึงค่าเฉลี่ยข้อสอบของปีนั้น
     year_means = exam_pivot.loc[year] if year in exam_pivot.index else pd.Series(dtype=float)
+
     wsum, total_w, has_any = 0.0, 0.0, False
     for subj_key, w in weights.items():
         if subj_key in year_means.index and not np.isnan(year_means[subj_key]):
             m = year_means[subj_key]
             has_any = True
         else:
+            # fallback: ใช้ค่าเฉลี่ยรวมทุกปี
             m = exam_feature_means.get(subj_key, np.nan)
-            if np.isnan(m): continue
-        wsum += m * w
+            if np.isnan(m):
+                continue
+        wsum    += m * w
         total_w += w
-    if total_w == 0 or not has_any: return np.nan
+
+    if total_w == 0 or not has_any:
+        return np.nan
     return wsum / total_w
 
-def predict_min_score(program_id: str) -> Optional[float]:
-    pid = str(program_id).strip()
-    matching_keys = [(p, c) for (p, c) in pivot_min.index if p == pid]
-    if not matching_keys: return None
 
+def predict_min_score(program_id: str) -> Optional[float]:
+    """
+    ทำนายคะแนนต่ำสุดปี 69 ของหลักสูตรแบบเจาะจงเฉพาะกลุ่มเกณฑ์รหัสเดียวกันเท่านั้น
+    - ต้องมีข้อมูลประวัติคะแนนครบทั้ง 4 ปี (65, 66, 67, 68) เปี๊ยบ ไม่มีข้อยกเว้น
+    - ใช้เฉพาะฟีเจอร์: คะแนนย้อนหลัง 1 ปี, คะแนนย้อนหลัง 2 ปี และ ความยากของข้อสอบเกณฑ์คณะนั้นๆ [min_lag1, min_lag2, exam_score]
+    - ไม่ใช้อัตราการแข่งขัน (comp_rate) และไม่มีระบบสุ่มหรือ Fallback เด็ดขาด
+    """
+    pid = str(program_id).strip()
+
+    # ค้นหาทุกรายละเอียดเกณฑ์ (criteria) ที่จับคู่กับ program_id นี้ใน index ของ pivot_min
+    matching_keys = [
+        (p, c) for (p, c) in pivot_min.index
+        if p == pid
+    ]
+
+    if not matching_keys:
+        print(f"❌ [Strict Mode] '{pid}' -> ไม่พบประวัติข้อมูลในฐานข้อมูล")
+        return None
+
+    # ตรวจสอบหาเกณฑ์รายละเอียดที่ข้อมูล 'ครบ 4 ปีเต็ม' เท่านั้น
     best_key = None
     for key in matching_keys:
         row = pivot_min.loc[key]
         years_available = set(col for col in REQUIRED_YEARS if col in row.index and not np.isnan(row[col]))
         if years_available == REQUIRED_YEARS:
             best_key = key
-            break
+            break  # เมื่อเจอรายละเอียดที่ระบุตรงครบ 4 ปีแล้ว ให้ล็อกตัวนี้ทันที
 
-    if best_key is None: return None
+    # หากรายละเอียดเกณฑ์นั้นข้อมูลไม่ครบ 4 ปี -> ปฏิเสธการทำนายทันที ไม่มีการเดาสุ่ม
+    if best_key is None:
+        print(f"❌ [Strict Mode] '{pid}' -> ข้อมูลประวัติเกณฑ์นี้มีไม่ครบ 4 ปีเต็ม จึงไม่ทำการทำนายผล")
+        return None
+
+    crit_fill = best_key[1]
+    crit_label = 'NaN' if crit_fill == NAN_PLACEHOLDER else crit_fill
+    print(f"🎯 [Strict Mode] กำลังเรียนรู้พฤติกรรมคะแนนของรหัส '{pid}' เกณฑ์: '{str(crit_label)[:50]}'")
+
     min_row = pivot_min.loc[best_key]
-    sorted_years = sorted(list(REQUIRED_YEARS))
+    sorted_years = sorted(list(REQUIRED_YEARS))  # จะได้ลำดับเวลา [65, 66, 67, 68]
 
+    # ------------------------------------------------------------------
+    # ขั้นตอนการทำตารางฝึกสอน (Training Dataset) ด้วย Sliding Window
+    # ------------------------------------------------------------------
     train_rows = []
     for i in range(WINDOW, len(sorted_years)):
-        t, lag1, lag2 = sorted_years[i], sorted_years[i - 1], sorted_years[i - 2]
-        min_l1, min_l2, tgt = min_row.get(lag1, np.nan), min_row.get(lag2, np.nan), min_row.get(t, np.nan)
-        exam_sc = weighted_exam_score(pid, t)
-        if any(np.isnan(v) for v in [min_l1, min_l2, tgt, exam_sc]): return None
-        train_rows.append({'min_lag1': min_l1, 'min_lag2': min_l2, 'exam_score': exam_sc, 'target': tgt})
+        t     = sorted_years[i]          # ปีผลลัพธ์ (เช่น 67, 68)
+        lag1  = sorted_years[i - 1]      # ย้อนหลัง 1 ปี
+        lag2  = sorted_years[i - 2]      # ย้อนหลัง 2 ปี
 
-    last_yr, prev_yr, pred_yr = sorted_years[-1], sorted_years[-2], sorted_years[-1] + 1
-    min_l1_pred, min_l2_pred = min_row.get(last_yr, np.nan), min_row.get(prev_yr, np.nan)
-    exam_sc_pred = weighted_exam_score(pid, pred_yr)
+        min_lag1 = min_row.get(lag1, np.nan)
+        min_lag2 = min_row.get(lag2, np.nan)
+        target   = min_row.get(t, np.nan)
+        
+        # ค้นหาค่าน้ำหนักความยากง่ายข้อสอบของเกณฑ์วิชาคณะนี้ ณ ปีเป้าหมายนั้นๆ
+        exam_sc  = weighted_exam_score(pid, t)
 
-    if any(np.isnan(v) for v in [min_l1_pred, min_l2_pred, exam_sc_pred]): return None
+        # หากมีค่าสูญหายหรือ NaN แม้แต่จุดเดียวในชุดหน้าต่างเวลานี้ จะสั่งปิดการทำนายทันที
+        if any(np.isnan(v) for v in [min_lag1, min_lag2, target, exam_sc]):
+            print(f"❌ [Strict Mode] สถิติประวัติช่วงปี {t} หรือข้อมูลคะสอบเฉลี่ยของเกณฑ์ไม่สมบูรณ์ -> ปฏิเสธการทำงาน")
+            return None
 
-    X_train = np.array([[r['min_lag1'], r['min_lag2'], r['exam_score']] for r in train_rows])
+        train_rows.append({
+            'min_lag1':   min_lag1,
+            'min_lag2':   min_lag2,
+            'exam_score': exam_sc,
+            'target':     target,
+        })
+
+    # ------------------------------------------------------------------
+    # เตรียมชุดตัวแปรอินพุตสำหรับพยากรณ์คะแนนของ "ปี 69"
+    # ------------------------------------------------------------------
+    last_year = sorted_years[-1]   # 68
+    prev_year = sorted_years[-2]   # 67
+    pred_year = last_year + 1      # 69
+
+    min_lag1_pred = min_row.get(last_year, np.nan)
+    min_lag2_pred = min_row.get(prev_year, np.nan)
+    exam_sc_pred  = weighted_exam_score(pid, pred_year)  # ดึงค่าเฉลี่ยข้อสอบที่เพิ่งสอบไปสำหรับปี 69
+
+    # ตรวจเช็กความสมบูรณ์ของตัวแปรอินพุตก่อนส่งให้สมการทำนายปี 69
+    if any(np.isnan(v) for v in [min_lag1_pred, min_lag2_pred, exam_sc_pred]):
+        print(f"❌ [Strict Mode] อินพุตใช้พยากรณ์ปี 69 ข้อมูลไม่ครบถ้วน -> ปฏิเสธการทำงาน")
+        return None
+
+    # ------------------------------------------------------------------
+    # ประมวลผลโมเดล Linear Regression คณะใครคณะมัน 100%
+    # ------------------------------------------------------------------
+    features = ['min_lag1', 'min_lag2', 'exam_score']
+    X_train = np.array([[r[f] for f in features] for r in train_rows])
     y_train = np.array([r['target'] for r in train_rows])
-    x_pred = np.array([[min_l1_pred, min_l2_pred, exam_sc_pred]])
+    x_pred  = np.array([[min_lag1_pred, min_lag2_pred, exam_sc_pred]])
 
     model = LinearRegression()
     model.fit(X_train, y_train)
+    
+    # คำนวณผลและตีกรอบเปอร์เซ็นต์ให้อยู่ในช่วงคะแนน 0 - 100 เสมอ
     pred = float(model.predict(x_pred)[0])
-    return round(max(0.0, min(100.0, pred)), 2)
+    pred = round(max(0.0, min(100.0, pred)), 2)
+    
+    print(f"🔮 [Prediction Success] คะแนนต่ำสุดทำนายปี 69 ของเกณฑ์นี้คือ: {pred}")
+    return pred
 
 
 # =====================================================================
-# ส่วนที่ 3: API Endpoints (รวมจาก Node.js มาที่นี่หมดแล้ว)
+# ส่วนที่ 3: API Endpoints
 # =====================================================================
 
-# 1. แทนที่การเรียกข้อมูลทั้งหมดให้หน้าเว็บ
 @app.get("/api/database")
 def get_database():
-    return tcas_database_frontend
+    return tcas_main_df.fillna("").to_dict(orient='records')
 
-# 2. เพิ่มระบบค้นหาให้หน้าเว็บ (โคลนมาจาก server.js เป๊ะๆ)
 @app.get("/api/search")
-def search_database(q: str = ""):
-    query = q.lower().strip()
-    if len(query) < 2:
+def search(q: str = ""):
+    if len(q) < 2:
         return []
-    
-    results = [
-        item for item in tcas_database_frontend
-        if query in item['uni'].lower() or
-           query in item['program'].lower() or
-           query in item['group'].lower()
-    ]
-    return results[:50]
+    q_lower = q.lower()
+    results = []
+    for _, row in tcas_main_df.iterrows():
+        if (q_lower in str(row.get("university_name","")).lower() or
+            q_lower in str(row.get("program_name","")).lower() or
+            q_lower in str(row.get("faculty_name","")).lower()):
+            results.append(row.fillna("").to_dict())
+        if len(results) >= 50:
+            break
+    return results
 
-# 3. เพิ่มระบบดึงรายชื่อคณะ
 @app.get("/api/groups")
 def get_groups():
-    groups = list(set(item['group'] for item in tcas_database_frontend if item['group']))
-    return groups
+    return tcas_main_df["faculty_name"].dropna().unique().tolist()
 
 @app.get("/api/predict/{program_id}")
 def get_prediction(program_id: str):
@@ -346,10 +436,11 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 ai_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
 
 def call_claude(system_prompt: str, user_prompt: str) -> str:
-    if ai_client is None: return "⚠️ ยังไม่ได้ตั้งค่า ANTHROPIC_API_KEY — AI ยังใช้งานไม่ได้"
+    if ai_client is None:
+        return "⚠️ ยังไม่ได้ตั้งค่า ANTHROPIC_API_KEY — AI ยังใช้งานไม่ได้"
     try:
         msg = ai_client.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-6",
             max_tokens=1024,
             system=system_prompt,
             messages=[{"role": "user", "content": user_prompt}],
@@ -358,6 +449,7 @@ def call_claude(system_prompt: str, user_prompt: str) -> str:
     except Exception as e:
         print(f"❌ Claude error: {e}")
         return "❌ ไม่สามารถวิเคราะห์ได้ในขณะนี้"
+
 
 class RankItem(BaseModel):
     rank: int
@@ -373,10 +465,23 @@ class AIRankRequest(BaseModel):
 
 @app.post("/api/ai-rank")
 def ai_rank(req: AIRankRequest):
-    items_text = "\n".join(f"{it.rank}. {it.uni} - {it.program} | คะแนนน้อง: {it.score} | Min ปีก่อน: {it.min68 or '—'} | 🔮 ทำนาย: {it.pred or '—'}" for it in req.items)
-    lock = "ล็อกอันดับ 1 ไว้" if req.lockFirst else "จัดทั้ง 10 อันดับใหม่ตามกลยุทธ์ปลอดภัย"
-    advice = call_claude("คุณเป็นที่ปรึกษา TCAS ตอบภาษาไทย", f"ลิสต์คณะ:\n{items_text}\nเงื่อนไข: {lock}")
+    items_text = "\n".join(
+        f"{it.rank}. {it.uni} - {it.program} | คะแนนน้อง: {it.score} | "
+        f"Min ปีก่อน: {it.min68 or '—'} | 🔮 ทำนาย: {it.pred or '—'}"
+        for it in req.items
+    )
+    lock = (
+        "ล็อกอันดับ 1 ไว้ จัดอันดับ 2–10 ใหม่ตามกลยุทธ์ปลอดภัย"
+        if req.lockFirst else
+        "จัดทั้ง 10 อันดับใหม่ตามกลยุทธ์ปลอดภัย (1–3 เสี่ยง, กลาง ๆ ตามตัว, ท้าย ๆ ชัวร์)"
+    )
+    advice = call_claude(
+        "คุณเป็นที่ปรึกษา TCAS ตอบภาษาไทย กระชับ แบ่ง 2 ส่วน: "
+        "1) สรุปความเสี่ยงอันดับเดิม 2) อันดับแนะนำใหม่พร้อมเหตุผล",
+        f"ลิสต์คณะ 10 อันดับ:\n{items_text}\n\nเงื่อนไข: {lock}"
+    )
     return {"advice": advice}
+
 
 class AIRecommendRequest(BaseModel):
     category: str
@@ -385,8 +490,20 @@ class AIRecommendRequest(BaseModel):
 
 @app.post("/api/ai-recommend")
 def ai_recommend(req: AIRecommendRequest):
-    advice = call_claude("คุณเป็นที่ปรึกษาแนะแนว TCAS", f"กลุ่มคณะ: {req.category}\nคะแนน: {req.score}")
+    CAT_TH = {
+        "sci": "วิทยาศาสตร์/วิศวกรรม/เทคโนโลยี",
+        "arts": "มนุษยศาสตร์/สังคมศาสตร์/ครุศาสตร์",
+        "biz": "บริหาร/บัญชี/เศรษฐศาสตร์/นิติ",
+        "creative": "ศิลปกรรม/นิเทศ/สถาปัตย์",
+    }
+    score_text = "ไม่ได้ระบุ" if not req.score else ", ".join(f"{k}:{v}" for k,v in req.score.items())
+    advice = call_claude(
+        "คุณเป็นที่ปรึกษาแนะแนว TCAS ตอบภาษาไทย 3–5 บรรทัด",
+        f"แหล่งที่มา: {req.source}\nกลุ่มคณะแนะนำ: {CAT_TH.get(req.category, req.category)}\n"
+        f"คะแนน: {score_text}\nอธิบายว่าทำไมเหมาะกับน้อง"
+    )
     return {"advice": advice}
+
 
 class SubjectFocusItem(BaseModel):
     key: str
@@ -400,64 +517,20 @@ class AIFocusRequest(BaseModel):
 
 @app.post("/api/ai-focus")
 def ai_focus(req: AIFocusRequest):
-    subj_text = "\n".join(f"- {s.name}: น้ำหนัก {s.weight:.1f}% | คะแนน: {s.score}" for s in req.subjects)
-    advice = call_claude("คุณเป็นที่ปรึกษาเตรียมสอบ TCAS", f"ชุดคณะ: {req.dreamName}\nวิชาสำคัญ:\n{subj_text}")
+    subj_text = "\n".join(
+        f"- {s.name}: น้ำหนัก {s.weight:.1f}% | คะแนนน้อง: {s.score}"
+        for s in req.subjects
+    )
+    advice = call_claude(
+        "คุณเป็นที่ปรึกษาเตรียมสอบ TCAS ตอบภาษาไทย แบ่งเป็นข้อ ๆ",
+        f"ชุดคณะ: {req.dreamName}\nวิชาสำคัญ:\n{subj_text}\nแนะนำวิชาที่ควรโฟกัส"
+    )
     return {"advice": advice}
 
-# =====================================================================
-# Serve หน้าเว็บ index.html (แก้ไขใหม่เพื่อความชัวร์ 100%)
-# =====================================================================
-from fastapi.responses import HTMLResponse
 
-@app.get("/", response_class=HTMLResponse)
-def serve_frontend():
-    # กำหนดตำแหน่งไฟล์ให้แม่นยำที่สุดบน Render
-    path = os.path.join(current_dir, "index.html")
-    if not os.path.exists(path):
-        path = "index.html" # เผื่อกรณีรันจาก root directory
-        
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()
-    except Exception as e:
-        return f"❌ เซิร์ฟเวอร์รันได้ แต่หาไฟล์ index.html ไม่เจอในระบบ: {str(e)}"
-    
-from fastapi.responses import HTMLResponse
-import os
-
-@app.get("/", response_class=HTMLResponse)
-def serve_frontend():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    path1 = os.path.join(base_dir, "index.html")
-    path2 = "index.html"
-    
-    if os.path.exists(path1):
-        with open(path1, "r", encoding="utf-8") as f:
-            return f.read()
-    elif os.path.exists(path2):
-        with open(path2, "r", encoding="utf-8") as f:
-            return f.read()
-    else:
-        # ถ้าหาไม่เจอจริงๆ ให้กางรายชื่อไฟล์ทั้งหมดบน Render ออกมาดูเลย!
-        try:
-            files_base = os.listdir(base_dir)
-            files_root = os.listdir(".")
-        except Exception as e:
-            files_base, files_root = str(e), str(e)
-            
-        return f"""
-        <html><body style="font-family:sans-serif; padding:20px;">
-            <h2 style="color:red;">❌ เซิร์ฟเวอร์รันแล้ว แต่ไม่พบไฟล์ index.html</h2>
-            <div style="background:#f4f4f4; padding:15px; border-radius:8px;">
-                <p><b>📂 ไฟล์ที่ Render มองเห็นตอนนี้มีดังนี้:</b></p>
-                <p><b>ในโฟลเดอร์โปรเจกต์:</b> {files_base}</p>
-                <p><b>ใน Root:</b> {files_root}</p>
-            </div>
-            <hr>
-            <h3>🛠️ วิธีแก้ไข (ดูจากรายชื่อไฟล์ด้านบน):</h3>
-            <ul>
-                <li>ถ้าไม่เห็นชื่อ <b>index.html</b> ในรายชื่อข้างบนเลย แปลว่ายังไม่ได้อัปโหลดขึ้น GitHub หรือไฟล์ตกหล่นครับ</li>
-                <li>ถ้าเห็นชื่อเป็น <b>Index.html</b> ให้กลับไปแก้ชื่อไฟล์ในคอมพิวเตอร์ให้เป็นตัวพิมพ์เล็กทั้งหมด แล้ว Push ขึ้น GitHub ใหม่</li>
-            </ul>
-        </body></html>
-        """
+# =====================================================================
+# Serve static files (index.html) จาก public/
+# =====================================================================
+public_dir = os.path.join(current_dir, "public")
+if os.path.exists(public_dir):
+    app.mount("/", StaticFiles(directory=public_dir, html=True), name="public")
