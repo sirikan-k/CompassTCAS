@@ -2414,7 +2414,7 @@
             async analyze() {
                 const di = document.getElementById('focus-dream-sel').value;
                 const si = document.getElementById('focus-score-sel').value;
-                if (di === '') { alert('เลือกชุดคณะก่อนนะ'); return; }
+                if (di === '') { alert('เลือกชุดคณะก่อน'); return; }
 
                 const dream = dreamApp.data[di];
                 const score = si !== '' ? scoreApp.data[si] : null;
