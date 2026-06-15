@@ -1546,10 +1546,14 @@
                 DB = await r.json();
                 const badge = document.getElementById('db-badge');
                 badge.className = 'db-badge online';
-                badge.innerText = `🟢 เชื่อมต่อข้อมูลแล้ว)`;
+                badge.innerText = `🟢 เชื่อมต่อข้อมูลแล้ว`;
             } catch (e) {
                 document.getElementById('db-badge').innerText = '🔴 เชื่อมต่อข้อมูลล้มเหลว';
             }
+            try {
+                const rt = await fetch(`${API_URL}/risk-thresholds`);
+                RISK_THRESHOLDS = await rt.json();
+            } catch (e) { console.warn('ไม่สามารถโหลด risk thresholds'); }
         }
 
         // ============================================================
@@ -1977,6 +1981,7 @@
                 document.getElementById('rank-dream-sel').innerHTML = dreams.length
                     ? dreams.map((d, i) => `<option value="${i}">${d.name}</option>`).join('')
                     : '<option value="">ยังไม่มีชุดคณะ</option>';
+                    
             },
 
             async analyze() {
@@ -2018,21 +2023,46 @@
                 this.renderCards();
             },
 
-            getRiskClass(score, min68, pred) {
+            getRiskClass(score, min68, pred, programId) {
                 const baseline = pred ?? min68;
-                if (!baseline) return { cls: 'risk-2', label: '⚠️ ไม่มีข้อมูล', dot: '#E67E22' };
+                if (!baseline) return {
+                    cls: 'risk-2', label: '⚠️ ไม่มีข้อมูล', dot: '#E67E22',
+                    reason: 'ไม่มีข้อมูลคะแนนอ้างอิงสำหรับหลักสูตรนี้'
+                };
+
                 const diff = score - baseline;
-                if (diff >= 8) return { cls: 'risk-5', label: '💚 โอกาสติดสูงมาก', dot: '#27AE60' };
-                if (diff >= 3) return { cls: 'risk-4', label: '🟢 โอกาสติดสูง', dot: '#8DC85A' };
-                if (diff >= -2) return { cls: 'risk-3', label: '🟡 มีโอกาสติด', dot: '#F1C40F' };
-                if (diff >= -6) return { cls: 'risk-2', label: '🟠 มีความเสี่ยง', dot: '#E67E22' };
-                return { cls: 'risk-1', label: '🔴 เสี่ยงสูงมาก', dot: '#E74C3C' };
+                const src = pred
+                    ? `คะแนนทำนายปี69 (${baseline.toFixed(2)})`
+                    : `Min ปี68 (${baseline.toFixed(2)})`;
+
+                // ดึง threshold ของหลักสูตรนี้ ถ้าไม่มีใช้ค่า default
+                const th = RISK_THRESHOLDS[programId];
+                const sd = th ? th.sd_diff : 4.0;
+
+                let cls, label, reason;
+                if (diff >= sd * 1.5) {
+                    cls = 'risk-5'; label = '💚 โอกาสติดสูงมาก';
+                    reason = `คะแนนน้อง (${score.toFixed(2)}) สูงกว่า${src} ถึง ${diff.toFixed(2)} คะแนน ซึ่งมากกว่า 1.5 เท่าของความผันผวนปกติของคณะนี้ (SD=${sd.toFixed(2)})`;
+                } else if (diff >= sd * 0.5) {
+                    cls = 'risk-4'; label = '🟢 โอกาสติดสูง';
+                    reason = `คะแนนน้อง (${score.toFixed(2)}) สูงกว่า${src} อยู่ ${diff.toFixed(2)} คะแนน อยู่เหนือช่วงความผันผวนปกติ (SD=${sd.toFixed(2)})`;
+                } else if (diff >= -sd * 0.5) {
+                    cls = 'risk-3'; label = '🟡 มีโอกาสติด';
+                    reason = `คะแนนน้อง (${score.toFixed(2)}) อยู่ในช่วงความผันผวนปกติของคณะนี้ (±${(sd * 0.5).toFixed(2)}) ยังต้องลุ้น`;
+                } else if (diff >= -sd * 1.5) {
+                    cls = 'risk-2'; label = '🟠 มีความเสี่ยง';
+                    reason = `คะแนนน้อง (${score.toFixed(2)}) ต่ำกว่า${src} อยู่ ${Math.abs(diff).toFixed(2)} คะแนน ซึ่งอยู่นอกช่วงปกติของคณะนี้`;
+                } else {
+                    cls = 'risk-1'; label = '🔴 เสี่ยงสูงมาก';
+                    reason = `คะแนนน้อง (${score.toFixed(2)}) ต่ำกว่า${src} ถึง ${Math.abs(diff).toFixed(2)} คะแนน มากกว่า 1.5 เท่าของความผันผวนปกติ (SD=${sd.toFixed(2)})`;
+                }
+                return { cls, label, dot: { 'risk-5': '#27AE60', 'risk-4': '#8DC85A', 'risk-3': '#F1C40F', 'risk-2': '#E67E22', 'risk-1': '#E74C3C' }[cls], reason };
             },
 
             renderCards() {
                 const cards = document.getElementById('rank-cards');
                 cards.innerHTML = this.currentItems.map((item, i) => {
-                    const risk = this.getRiskClass(item.finalScore, item.dbFac.min68, item.pred);
+                    const risk = this.getRiskClass(item.finalScore, item.dbFac.min68, item.pred, item.dbFac.id);
                     return `
             <div class="rank-card" draggable="true" data-idx="${i}"
                 ondragstart="rankApp.dragStart(event,${i})"
@@ -2045,8 +2075,10 @@
                     <div class="text-muted" style="font-size:0.85rem;">${item.group} — ${item.program}</div>
                     ${item.missing.length ? `<div style="color:var(--danger);font-size:0.78rem;margin-top:4px;">⚠️ ขาดวิชา: ${item.missing.join(', ')}</div>` : ''}
                     <div style="margin-top:8px;">
-                        <span class="risk-badge ${risk.cls}">${risk.label}</span>
-                        <div style="font-size:0.78rem; color:var(--muted); margin-top:4px;">📌 ${risk.reason}</div>
+                        <span class="risk-badge ${risk.cls}" style="cursor:pointer;"
+                            onclick="rankApp.showRiskPopup(event, '${risk.label}', \`${risk.reason}\`)">
+                            ${risk.label} ℹ️
+                        </span>
                     </div>
                 </div>
                 <div class="rank-scores">
@@ -2107,6 +2139,31 @@
                     document.getElementById('ai-loading')?.remove();
                     cards.innerHTML += `<div class="section-block" style="margin-top:16px; color:var(--danger);">❌ ไม่สามารถเชื่อมต่อ AI ได้ </div>`;
                 }
+            },
+            showRiskPopup(e, label, reason) {
+                e.stopPropagation();
+                let pop = document.getElementById('risk-popup');
+                if (!pop) {
+                    pop = document.createElement('div');
+                    pop.id = 'risk-popup';
+                    pop.style.cssText = `position:fixed; z-index:999; background:var(--card);
+            border:1.5px solid var(--border); border-radius:var(--radius);
+            padding:16px 20px; max-width:300px; box-shadow:var(--shadow);
+            font-family:'Sarabun',sans-serif; font-size:0.9rem; line-height:1.6;`;
+                    pop.onclick = ev => ev.stopPropagation();
+                    document.body.appendChild(pop);
+                    document.addEventListener('click', () => pop.style.display = 'none');
+                }
+                pop.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-weight:700;">${label}</div>
+            <span onclick="document.getElementById('risk-popup').style.display='none'"
+                style="cursor:pointer; font-size:1.2rem; color:var(--muted); padding:0 4px;">✕</span>
+        </div>
+        <div style="color:var(--muted);">📌 ${reason}</div>`;
+                pop.style.display = 'block';
+                pop.style.top = Math.min(e.clientY + 8, window.innerHeight - 200) + 'px';
+                pop.style.left = Math.min(e.clientX + 8, window.innerWidth - 320) + 'px';
             },
         };
 

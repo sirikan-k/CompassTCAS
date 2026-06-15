@@ -546,6 +546,30 @@ def evaluate_model():
 
 eval_result = evaluate_model()
 
+# คำนวณ risk threshold รายหลักสูตร จาก SD ของ Min ข้ามปี
+def compute_risk_thresholds():
+    result = {}
+    for (pid, crit), row in pivot_min.iterrows():
+        years_available = [y for y in ALL_YEARS if y in row.index and not np.isnan(row[y])]
+        if len(years_available) < 2:
+            continue
+        scores = [float(row[y]) for y in years_available]
+        diffs  = [scores[i+1] - scores[i] for i in range(len(scores)-1)]
+        mean_d = float(np.mean(diffs))
+        sd_d   = float(np.std(diffs)) if len(diffs) > 1 else 3.0
+        if sd_d < 1.0:
+            sd_d = 1.0  # กันไม่ให้ SD เล็กเกินไป
+        if pid not in result:
+            result[pid] = {"mean_diff": round(mean_d, 2), "sd_diff": round(sd_d, 2)}
+    return result
+
+risk_thresholds = compute_risk_thresholds()
+print(f"📊 คำนวณ risk threshold สำเร็จ: {len(risk_thresholds)} หลักสูตร")
+
+@app.get("/api/risk-thresholds")
+def get_risk_thresholds():
+    return risk_thresholds
+
 @app.get("/api/model-eval")
 def get_model_eval():
     return eval_result
