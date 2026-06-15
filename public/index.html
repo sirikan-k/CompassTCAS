@@ -1059,24 +1059,24 @@
             <div class="section-block">
                 <div class="section-title">📝 A-Level (คะแนนเต็ม 100)</div>
                 <div class="grid-3" style="margin-bottom:12px;">
-                    <div class="form-group"><label class="form-label">คณิต 1 </label><input type="number"
-                            id="s-alv61" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">คณิต 2 </label><input type="number"
-                            id="s-alv62" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">คณิต 1 </label><input type="number" id="s-alv61"
+                            class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">คณิต 2 </label><input type="number" id="s-alv62"
+                            class="form-control" placeholder="0" min="0" max="100"></div>
                     <div class="form-group"><label class="form-label">วิทย์ประยุกต์ </label><input type="number"
                             id="s-alv63" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">ฟิสิกส์ </label><input type="number"
-                            id="s-alv64" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">ฟิสิกส์ </label><input type="number" id="s-alv64"
+                            class="form-control" placeholder="0" min="0" max="100"></div>
                     <div class="form-group"><label class="form-label">เคมี </label><input type="number" id="s-alv65"
                             class="form-control" placeholder="0" min="0" max="100"></div>
                     <div class="form-group"><label class="form-label">ชีวะ </label><input type="number" id="s-alv66"
                             class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">สังคม </label><input type="number"
-                            id="s-alv70" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">ภาษาไทย </label><input type="number"
-                            id="s-alv81" class="form-control" placeholder="0" min="0" max="100"></div>
-                    <div class="form-group"><label class="form-label">อังกฤษ </label><input type="number"
-                            id="s-alv82" class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">สังคม </label><input type="number" id="s-alv70"
+                            class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">ภาษาไทย </label><input type="number" id="s-alv81"
+                            class="form-control" placeholder="0" min="0" max="100"></div>
+                    <div class="form-group"><label class="form-label">อังกฤษ </label><input type="number" id="s-alv82"
+                            class="form-control" placeholder="0" min="0" max="100"></div>
                 </div>
                 <div class="accordion">
                     <div class="accordion-header" onclick="toggleAccordion('acc-lang3')">
@@ -1981,7 +1981,7 @@
                 document.getElementById('rank-dream-sel').innerHTML = dreams.length
                     ? dreams.map((d, i) => `<option value="${i}">${d.name}</option>`).join('')
                     : '<option value="">ยังไม่มีชุดคณะ</option>';
-                    
+
             },
 
             async analyze() {
@@ -2187,10 +2187,10 @@
         ];
 
         const recommendApp = {
-                selectedMBTI: null,
-                quizAnswers: {},
-                quizIdx: 0,
-                _selectedValue: null,
+            selectedMBTI: null,
+            quizAnswers: {},
+            quizIdx: 0,
+            _selectedValue: null,
 
             loadDropdowns() {
                 const scores = scoreApp.data;
@@ -2260,13 +2260,6 @@
                 const q = QUIZ_QUESTIONS[this.quizIdx];
                 this.quizAnswers[q.key] = this._selectedValue ?? 50;
                 this._selectedValue = null;
-                this.quizIdx++;
-                this.showQuestion();
-            },
-
-            nextQuestion() {
-                const q = QUIZ_QUESTIONS[this.quizIdx];
-                this.quizAnswers[q.key] = parseInt(document.getElementById('q-slider').value);
                 this.quizIdx++;
                 this.showQuestion();
             },
@@ -2367,43 +2360,43 @@
         // FOCUS APP
         // ============================================================
         const focusApp = {
-                loadDropdowns() {
-                    const dreams = dreamApp.data;
-                    const scores = scoreApp.data;
-                    document.getElementById('focus-dream-sel').innerHTML = dreams.length
-                        ? dreams.map((d, i) => `<option value="${i}">${d.name}</option>`).join('')
-                        : '<option value="">ยังไม่มีชุดคณะ</option>';
-                    document.getElementById('focus-score-sel').innerHTML =
-                        '<option value="">— ไม่เลือก —</option>' +
-                        scores.map((s, i) => `<option value="${i}">${s.name}</option>`).join('');
-                },
+            loadDropdowns() {
+                const dreams = dreamApp.data;
+                const scores = scoreApp.data;
+                document.getElementById('focus-dream-sel').innerHTML = dreams.length
+                    ? dreams.map((d, i) => `<option value="${i}">${d.name}</option>`).join('')
+                    : '<option value="">ยังไม่มีชุดคณะ</option>';
+                document.getElementById('focus-score-sel').innerHTML =
+                    '<option value="">— ไม่เลือก —</option>' +
+                    scores.map((s, i) => `<option value="${i}">${s.name}</option>`).join('');
+            },
 
-                async analyze() {
-                    const di = document.getElementById('focus-dream-sel').value;
-                    const si = document.getElementById('focus-score-sel').value;
-                    if (di === '') { alert('เลือกชุดคณะก่อนนะ'); return; }
+            async analyze() {
+                const di = document.getElementById('focus-dream-sel').value;
+                const si = document.getElementById('focus-score-sel').value;
+                if (di === '') { alert('เลือกชุดคณะก่อนนะ'); return; }
 
-                    const dream = dreamApp.data[di];
-                    const score = si !== '' ? scoreApp.data[si] : null;
+                const dream = dreamApp.data[di];
+                const score = si !== '' ? scoreApp.data[si] : null;
 
-                    // รวมน้ำหนักวิชาจากทุกคณะ
-                    let weightSum = {};
-                    dream.items.forEach(fac => {
-                        const dbFac = DB.find(c => c.id === fac.id);
-                        if (!dbFac) return;
-                        for (const [k, w] of Object.entries(dbFac.criteria || {})) {
-                            weightSum[k] = (weightSum[k] || 0) + parseFloat(w);
-                        }
-                    });
+                // รวมน้ำหนักวิชาจากทุกคณะ
+                let weightSum = {};
+                dream.items.forEach(fac => {
+                    const dbFac = DB.find(c => c.id === fac.id);
+                    if (!dbFac) return;
+                    for (const [k, w] of Object.entries(dbFac.criteria || {})) {
+                        weightSum[k] = (weightSum[k] || 0) + parseFloat(w);
+                    }
+                });
 
-                    const sorted = Object.entries(weightSum).sort((a, b) => b[1] - a[1]).slice(0, 8);
-                    const bars = document.getElementById('focus-bars');
-                    bars.innerHTML = sorted.map(([k, total], i) => {
-                        const avg = total / dream.items.length;
-                        const cur = score ? (score[k] || 0) : null;
-                        const target = 80;
-                        const curW = cur !== null ? Math.min(100, cur) : null;
-                        return `
+                const sorted = Object.entries(weightSum).sort((a, b) => b[1] - a[1]).slice(0, 8);
+                const bars = document.getElementById('focus-bars');
+                bars.innerHTML = sorted.map(([k, total], i) => {
+                    const avg = total / dream.items.length;
+                    const cur = score ? (score[k] || 0) : null;
+                    const target = 80;
+                    const curW = cur !== null ? Math.min(100, cur) : null;
+                    return `
             <div class="bar-wrap">
                 <div class="bar-label">
                     <span style="color:${i < 2 ? 'var(--danger)' : 'var(--text)'};">${i + 1}. ${SUBJ_MAP[k] || k}</span>
@@ -2411,47 +2404,47 @@
                 </div>
                 <div class="bar-track">
                     ${cur !== null
-                                ? `<div class="bar-current" style="width:${curW}%;"></div>
+                            ? `<div class="bar-current" style="width:${curW}%;"></div>
                            <div class="bar-target" style="left:${target}%;"></div>`
-                                : `<div class="bar-current" style="width:${avg * 1.2}%; background:var(--brown-300);"></div>`}
+                            : `<div class="bar-current" style="width:${avg * 1.2}%; background:var(--brown-300);"></div>`}
                 </div>
                 ${cur !== null ? `<div class="text-muted" style="font-size:0.8rem;margin-top:4px;">คะแนนของคุณ: ${cur} | เป้า: ${target}</div>` : ''}
             </div>`;
-                    }).join('');
+                }).join('');
 
-                    // เรียก AI วิเคราะห์
-                    const aiWrap = document.getElementById('focus-ai-wrap');
-                    if (score) {
-                        aiWrap.innerHTML = '<div style="text-align:center;"><div class="spinner"></div><p class="text-muted" style="margin-top:10px;">AI กำลังวิเคราะห์...</p></div>';
-                        try {
-                            const r = await fetch(`${AI_URL}/api/ai-focus`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    subjects: sorted.map(([k, w]) => ({ key: k, name: SUBJ_MAP[k] || k, weight: w / dream.items.length, score: score[k] || 0 })),
-                                    dreamName: dream.name,
-                                }),
-                            });
-                            const d = await r.json();
-                            aiWrap.innerHTML = `<div class="section-block" style="border-left:4px solid var(--primary);">
+                // เรียก AI วิเคราะห์
+                const aiWrap = document.getElementById('focus-ai-wrap');
+                if (score) {
+                    aiWrap.innerHTML = '<div style="text-align:center;"><div class="spinner"></div><p class="text-muted" style="margin-top:10px;">AI กำลังวิเคราะห์...</p></div>';
+                    try {
+                        const r = await fetch(`${AI_URL}/api/ai-focus`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                subjects: sorted.map(([k, w]) => ({ key: k, name: SUBJ_MAP[k] || k, weight: w / dream.items.length, score: score[k] || 0 })),
+                                dreamName: dream.name,
+                            }),
+                        });
+                        const d = await r.json();
+                        aiWrap.innerHTML = `<div class="section-block" style="border-left:4px solid var(--primary);">
                     <div class="section-title">🤖 AI แนะนำ</div>
                     <div style="line-height:1.8;white-space:pre-line;">${d.advice || 'ไม่สามารถวิเคราะห์ได้'}</div></div>`;
-                        } catch (e) {
-                            aiWrap.innerHTML = `<div class="text-muted" style="text-align:center;">❌ ไม่สามารถเชื่อมต่อ AI ได้</div>`;
-                        }
-                    } else {
-                        aiWrap.innerHTML = '';
+                    } catch (e) {
+                        aiWrap.innerHTML = `<div class="text-muted" style="text-align:center;">❌ ไม่สามารถเชื่อมต่อ AI ได้</div>`;
                     }
+                } else {
+                    aiWrap.innerHTML = '';
+                }
 
-                    nav('focus-result');
-                },
-            };
+                nav('focus-result');
+            },
+        };
 
-            // ============================================================
-            // INIT
-            // ============================================================
-            compareApp.init();
-            initDB();
+        // ============================================================
+        // INIT
+        // ============================================================
+        compareApp.init();
+        initDB();
     </script>
 </body>
 
