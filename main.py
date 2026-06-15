@@ -444,6 +444,112 @@ def evaluate_model():
 
 eval_result = evaluate_model()
 
+def evaluate_model():
+    errors_model     = []
+    errors_baseline1 = []  # ปีก่อน
+    errors_baseline2 = []  # ค่าเฉลี่ย 3 ปี
+    case_details     = []
+
+    for (pid, crit), row in pivot_min.iterrows():
+        years_available = [y for y in ALL_YEARS if y in row.index and not np.isnan(row[y])]
+        if set(years_available) != REQUIRED_YEARS:
+            continue
+
+        test_year   = 68
+        train_years = [65, 66, 67]
+
+        train_rows = []
+        for i in range(WINDOW, len(train_years)):
+            lag1    = row[train_years[i - 1]]
+            lag2    = row[train_years[i - 2]]
+            target  = row[train_years[i]]
+            exam_sc = weighted_exam_score(pid, train_years[i])
+            if any(np.isnan(v) for v in [lag1, lag2, target, exam_sc]):
+                break
+            train_rows.append([lag1, lag2, exam_sc, target])
+
+        if len(train_rows) < 1:
+            continue
+
+        try:
+            X = np.array([r[:3] for r in train_rows])
+            y = np.array([r[3]  for r in train_rows])
+            model = LinearRegression().fit(X, y)
+
+            lag1_pred = float(row[67])
+            lag2_pred = float(row[66])
+            exam_pred = weighted_exam_score(pid, test_year)
+            if any(np.isnan(v) for v in [lag1_pred, lag2_pred, exam_pred]):
+                continue
+
+            pred   = float(model.predict([[lag1_pred, lag2_pred, exam_pred]])[0])
+            actual = float(row[test_year])
+            error  = pred - actual
+
+            errors_model.append(error ** 2)
+            errors_baseline1.append((float(row[67]) - actual) ** 2)
+            errors_baseline2.append((float(np.mean([row[65], row[66], row[67]])) - actual) ** 2)
+
+            case_details.append({
+                "program_id":  pid,
+                "predicted":   round(pred, 2),
+                "actual":      round(actual, 2),
+                "error":       round(error, 2),
+                "abs_error":   round(abs(error), 2),
+            })
+        except:
+            continue
+
+    result = {}
+    if errors_model:
+        rmse_model     = float(np.sqrt(np.mean(errors_model)))
+        rmse_baseline1 = float(np.sqrt(np.mean(errors_baseline1)))
+        rmse_baseline2 = float(np.sqrt(np.mean(errors_baseline2)))
+
+        print(f"📈 RMSE โมเดล:          {rmse_model:.2f}%")
+        print(f"📉 RMSE baseline ปีก่อน: {rmse_baseline1:.2f}%")
+        print(f"📉 RMSE baseline 3ปีเฉลี่ย: {rmse_baseline2:.2f}%")
+        print(f"✅ ดีกว่า baseline1: {rmse_baseline1 - rmse_model:.2f}%")
+        print(f"✅ ดีกว่า baseline2: {rmse_baseline2 - rmse_model:.2f}%")
+
+        case_details.sort(key=lambda x: x["abs_error"], reverse=True)
+        over  = [x for x in case_details if x["error"] > 0]
+        under = [x for x in case_details if x["error"] < 0]
+
+        result = {
+            "rmse_model":          round(rmse_model, 2),
+            "rmse_baseline_lag1":  round(rmse_baseline1, 2),
+            "rmse_baseline_avg3":  round(rmse_baseline2, 2),
+            "better_than_lag1":    round(rmse_baseline1 - rmse_model, 2),
+            "better_than_avg3":    round(rmse_baseline2 - rmse_model, 2),
+            "n_programs":          len(errors_model),
+            "over_predict_count":  len(over),
+            "under_predict_count": len(under),
+            "worst_10": case_details[:10],
+            "best_10":  case_details[-10:][::-1],
+        }
+
+    return result
+
+eval_result = evaluate_model()
+
+@app.get("/api/model-eval")
+def get_model_eval():
+    return eval_result
+
+@app.get("/api/error-analysis")
+def get_error_analysis():
+    return {
+        "worst_predictions": eval_result.get("worst_10", []),
+        "best_predictions":  eval_result.get("best_10", []),
+        "over_predict_count":  eval_result.get("over_predict_count", 0),
+        "under_predict_count": eval_result.get("under_predict_count", 0),
+        "summary": (
+            "โมเดล over-predict มากกว่า" if eval_result.get("over_predict_count", 0) > eval_result.get("under_predict_count", 0)
+            else "โมเดล under-predict มากกว่า"
+        )
+    }
+
 # เปิด endpoint ให้ดูได้
 @app.get("/api/model-eval")
 def get_model_eval():
