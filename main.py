@@ -384,66 +384,11 @@ def predict_min_score(program_id: str) -> Optional[float]:
     return pred
 
 # =====================================================================
-# ส่วนที่ 2.5: วัด Error ของโมเดล (เพิ่มหลัง loadDatabase)
+# ส่วนที่ 2.5: ประเมินประสิทธิภาพโมเดลด้วย Leave-One-Out (ทดสอบทำนายปี 68)
+#   - เปรียบเทียบ RMSE และ MAE กับ 2 baseline:
+#       baseline1 = ใช้คะแนนปีก่อน (lag1)
+#       baseline2 = ค่าเฉลี่ย 3 ปีย้อนหลัง
 # =====================================================================
-def evaluate_model():
-    errors_model    = []
-    errors_baseline = []
-
-    for (pid, crit), row in pivot_min.iterrows():
-        years_available = [y for y in ALL_YEARS if y in row.index and not np.isnan(row[y])]
-        if set(years_available) != REQUIRED_YEARS:
-            continue
-
-        # Leave-One-Out: ทดสอบทำนายปี 68 โดยใช้ 65,66,67 train
-        test_year = 68
-        train_years = [65, 66, 67]
-
-        train_rows = []
-        for i in range(1, len(train_years)):
-            lag1 = row[train_years[i-1]]
-            lag2 = row[train_years[i-2]] if i >= 2 else np.nan
-            target = row[train_years[i]]
-            exam_sc = weighted_exam_score(pid, train_years[i])
-            if any(np.isnan(v) for v in [lag1, lag2, target, exam_sc]):
-                break
-            train_rows.append([lag1, lag2, exam_sc, target])
-
-        if len(train_rows) < 1:
-            continue
-
-        try:
-            X = np.array([r[:3] for r in train_rows])
-            y = np.array([r[3]  for r in train_rows])
-            model = LinearRegression().fit(X, y)
-
-            lag1_pred = row[67]
-            lag2_pred = row[66]
-            exam_pred = weighted_exam_score(pid, test_year)
-            if any(np.isnan(v) for v in [lag1_pred, lag2_pred, exam_pred]):
-                continue
-
-            pred   = float(model.predict([[lag1_pred, lag2_pred, exam_pred]])[0])
-            actual = float(row[test_year])
-            errors_model.append((pred - actual) ** 2)
-            errors_baseline.append((float(row[67]) - actual) ** 2)
-        except:
-            continue
-
-    if errors_model:
-        rmse_model    = np.sqrt(np.mean(errors_model))
-        rmse_baseline = np.sqrt(np.mean(errors_baseline))
-        print(f" RMSE โมเดล:    {rmse_model:.2f}%")
-        print(f" RMSE baseline: {rmse_baseline:.2f}%")
-        print(f" โมเดลดีกว่า baseline: {rmse_baseline - rmse_model:.2f}%")
-        return {
-            "rmse_model":    round(float(np.sqrt(np.mean(errors_model))), 2) if errors_model else None,
-            "rmse_baseline": round(float(np.sqrt(np.mean(errors_baseline))), 2) if errors_baseline else None,
-            "n_programs": len(errors_model)
-        }
-
-eval_result = evaluate_model()
-
 def evaluate_model():
     errors_model     = []   # สำหรับ RMSE (ยกกำลังสอง)
     abs_errors_model = []   # สำหรับ MAE (ค่าสัมบูรณ์)
