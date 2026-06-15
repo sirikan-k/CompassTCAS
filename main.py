@@ -445,9 +445,12 @@ def evaluate_model():
 eval_result = evaluate_model()
 
 def evaluate_model():
-    errors_model     = []
-    errors_baseline1 = []  # ปีก่อน
-    errors_baseline2 = []  # ค่าเฉลี่ย 3 ปี
+    errors_model     = []   # สำหรับ RMSE (ยกกำลังสอง)
+    abs_errors_model = []   # สำหรับ MAE (ค่าสัมบูรณ์)
+    errors_baseline1 = []
+    abs_errors_b1    = []
+    errors_baseline2 = []
+    abs_errors_b2    = []
     case_details     = []
 
     for (pid, crit), row in pivot_min.iterrows():
@@ -487,8 +490,11 @@ def evaluate_model():
             error  = pred - actual
 
             errors_model.append(error ** 2)
+            abs_errors_model.append(abs(error))           # เพิ่ม
             errors_baseline1.append((float(row[67]) - actual) ** 2)
+            abs_errors_b1.append(abs(float(row[67]) - actual))    # เพิ่ม
             errors_baseline2.append((float(np.mean([row[65], row[66], row[67]])) - actual) ** 2)
+            abs_errors_b2.append(abs(float(np.mean([row[65], row[66], row[67]])) - actual))  # เพิ่ม)
 
             case_details.append({
                 "program_id":  pid,
@@ -505,23 +511,30 @@ def evaluate_model():
         rmse_model     = float(np.sqrt(np.mean(errors_model)))
         rmse_baseline1 = float(np.sqrt(np.mean(errors_baseline1)))
         rmse_baseline2 = float(np.sqrt(np.mean(errors_baseline2)))
+        mae_model      = float(np.mean(abs_errors_model))      # เพิ่ม
+        mae_baseline1  = float(np.mean(abs_errors_b1))         # เพิ่ม
+        mae_baseline2  = float(np.mean(abs_errors_b2))         # เพิ่ม
 
-        print(f"📈 RMSE โมเดล:          {rmse_model:.2f}%")
-        print(f"📉 RMSE baseline ปีก่อน: {rmse_baseline1:.2f}%")
-        print(f"📉 RMSE baseline 3ปีเฉลี่ย: {rmse_baseline2:.2f}%")
-        print(f"✅ ดีกว่า baseline1: {rmse_baseline1 - rmse_model:.2f}%")
-        print(f"✅ ดีกว่า baseline2: {rmse_baseline2 - rmse_model:.2f}%")
+        print(f"RMSE โมเดล:            {rmse_model:.2f}%")
+        print(f"MAE  โมเดล:            {mae_model:.2f}%")
+        print(f"RMSE baseline ปีก่อน:  {rmse_baseline1:.2f}%")
+        print(f"MAE  baseline ปีก่อน:  {mae_baseline1:.2f}%")
 
         case_details.sort(key=lambda x: x["abs_error"], reverse=True)
         over  = [x for x in case_details if x["error"] > 0]
         under = [x for x in case_details if x["error"] < 0]
 
         result = {
-            "rmse_model":          round(rmse_model, 2),
-            "rmse_baseline_lag1":  round(rmse_baseline1, 2),
-            "rmse_baseline_avg3":  round(rmse_baseline2, 2),
-            "better_than_lag1":    round(rmse_baseline1 - rmse_model, 2),
-            "better_than_avg3":    round(rmse_baseline2 - rmse_model, 2),
+            "rmse_model":         round(rmse_model, 2),
+            "mae_model":          round(mae_model, 2),  
+            "rmse_baseline_lag1": round(rmse_baseline1, 2),
+            "mae_baseline_lag1":  round(mae_baseline1, 2),  
+            "rmse_baseline_avg3": round(rmse_baseline2, 2),
+            "mae_baseline_avg3":  round(mae_baseline2, 2),  
+            "better_than_lag1_rmse": round(rmse_baseline1 - rmse_model, 2),
+            "better_than_lag1_mae":  round(mae_baseline1 - mae_model, 2),  
+            "better_than_avg3_rmse": round(rmse_baseline2 - rmse_model, 2),
+            "better_than_avg3_mae":  round(mae_baseline2 - mae_model, 2), 
             "n_programs":          len(errors_model),
             "over_predict_count":  len(over),
             "under_predict_count": len(under),
