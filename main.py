@@ -242,73 +242,6 @@ exam_feature_means = df_exam.groupby('key')['mean'].mean().to_dict()
 exam_pivot = df_exam.pivot_table(index='year', columns='key', values='mean')
 print(f"📊 exam_stats ปีที่มี: {sorted(df_exam['year'].unique())}")
 
-# ------------------------------------------------------------------
-# 1E. กลุ่ม "เพื่อนร่วมเกณฑ์" (Peer Group) ข้ามมหาวิทยาลัย
-#     จับกลุ่มหลักสูตรที่ใช้ "ชุดวิชา" ในเกณฑ์เหมือนกัน (ไม่สนใจ % น้ำหนักย่อย)
-#     เช่น {tgat, tpat3, a_lv_61, a_lv_64} ของวิศวะฯ ที่ไหนก็จัดเป็นกลุ่มเดียวกัน
-#     แล้วคำนวณ z-score ว่าคะแนนหลักสูตรนั้น "อยู่สูง/ต่ำกว่าเพื่อนกี่ SD" ในปีนั้นๆ
-#     ใช้เป็นฟีเจอร์เสริม (ไม่บังคับ) ใน predict_min_score()
-# ------------------------------------------------------------------
-META_CRITERIA_KEYS = {'cal_type', 'cal_score_sum', 'cal_subject_name'}
-MIN_PEERS = 5  # ต้องมีเพื่อนร่วมเกณฑ์อย่างน้อยเท่านี้ถึงจะเชื่อค่า z ได้ ไม่งั้นถือว่าไม่มีข้อมูลพอ
-
-def _criteria_signature(weights: dict):
-    """แปลง criteria weights -> เซ็ตของ 'รายวิชา' ที่ใช้ (ตัด metadata และไม่สนใจ % น้ำหนัก)"""
-    keys = set()
-    for k, v in weights.items():
-        if k in META_CRITERIA_KEYS:
-            continue
-        try:
-            if float(v) > 0:
-                keys.add(k)
-        except (TypeError, ValueError):
-            continue
-    return frozenset(keys) if keys else None
-
-# program_id -> signature (ชุดวิชา)
-program_signature = {}
-for _pid, _w in criteria_lookup.items():
-    _sig = _criteria_signature(_w)
-    if _sig:
-        program_signature[_pid] = _sig
-
-# คะแนนเฉลี่ยรายปีของแต่ละ program_id (เฉลี่ยรวมทุก criteria_detail ของ program เดียวกัน)
-pid_year_score = df_agg.groupby(['program_id', 'year'])['min_pct'].mean().unstack('year')
-
-# signature -> รายชื่อ program_id ในกลุ่มเดียวกัน (เฉพาะตัวที่มีคะแนนอยู่ใน pid_year_score)
-peers_by_signature: Dict[Any, list] = {}
-for _pid, _sig in program_signature.items():
-    if _pid in pid_year_score.index:
-        peers_by_signature.setdefault(_sig, []).append(_pid)
-
-print(f"👥 จับกลุ่มเพื่อนร่วมเกณฑ์ได้ {len(peers_by_signature)} กลุ่ม "
-      f"(กลุ่มที่มีสมาชิก >= {MIN_PEERS}: {sum(1 for v in peers_by_signature.values() if len(v) >= MIN_PEERS)} กลุ่ม)")
-
-def peer_relative_score(program_id: str, year: int) -> float:
-    """
-    z-score เทียบตำแหน่งคะแนนของ program_id ในปี `year` กับ "เพื่อนร่วมเกณฑ์"
-    (หลักสูตรอื่นที่ใช้ชุดวิชาเดียวกัน ข้ามมหาวิทยาลัย) ในปีเดียวกัน
-    z > 0 หมายถึงคะแนนปีนั้นสูงกว่าเพื่อนเฉลี่ย, z < 0 หมายถึงต่ำกว่า
-    คืนค่า NaN ถ้าไม่มีคะแนนตัวเองปีนั้น หรือเพื่อนไม่พอ (< MIN_PEERS)
-    """
-    pid = str(program_id).strip()
-    sig = program_signature.get(pid)
-    if sig is None or sig not in peers_by_signature:
-        return np.nan
-    if pid not in pid_year_score.index or year not in pid_year_score.columns:
-        return np.nan
-    own = pid_year_score.loc[pid, year]
-    if pd.isna(own):
-        return np.nan
-    peer_ids = [p for p in peers_by_signature[sig] if p != pid]
-    peer_vals = pid_year_score.loc[peer_ids, year].dropna() if peer_ids else pd.Series(dtype=float)
-    if len(peer_vals) < MIN_PEERS:
-        return np.nan
-    mean, std = float(peer_vals.mean()), float(peer_vals.std())
-    if std < 1.0:
-        std = 1.0  # กัน std เล็กเกินไปจน z พุ่งเกินจริง
-    return float((own - mean) / std)
-
 
 # =====================================================================
 # ส่วนที่ 2: ฟังก์ชันโมเดลทำนายคะแนน (Strict Mode เฉพาะเจาะจงรายคณะและเกณฑ์)
@@ -391,7 +324,6 @@ def predict_min_score(program_id: str) -> Optional[float]:
     # ขั้นตอนการทำตารางฝึกสอน (Training Dataset) ด้วย Sliding Window
     # ------------------------------------------------------------------
     train_rows = []
-    use_peer_feature = True   # จะปิดอัตโนมัติทั้งชุด ถ้าขาดข้อมูลเพื่อนแม้แต่ปีเดียว
     for i in range(WINDOW, len(sorted_years)):
         t     = sorted_years[i]          # ปีผลลัพธ์ (เช่น 67, 68)
         lag1  = sorted_years[i - 1]      # ย้อนหลัง 1 ปี
@@ -409,20 +341,10 @@ def predict_min_score(program_id: str) -> Optional[float]:
             print(f"❌ [Strict Mode] สถิติประวัติช่วงปี {t} หรือข้อมูลคะสอบเฉลี่ยของเกณฑ์ไม่สมบูรณ์ -> ปฏิเสธการทำงาน")
             return None
 
-        # ฟีเจอร์เสริม (ไม่บังคับ): ตำแหน่งคะแนนเทียบ "เพื่อนร่วมเกณฑ์" ข้ามมหาวิทยาลัย ปี lag1
-        # และเทรนด์ว่ากำลังไต่อันดับขึ้น/ลงเทียบเพื่อนจาก lag2 -> lag1
-        z_lag1  = peer_relative_score(pid, lag1)
-        z_lag2  = peer_relative_score(pid, lag2)
-        z_trend = (z_lag1 - z_lag2) if not (np.isnan(z_lag1) or np.isnan(z_lag2)) else np.nan
-        if np.isnan(z_lag1) or np.isnan(z_trend):
-            use_peer_feature = False  # เพื่อนไม่พอในปีใดปีหนึ่ง -> ปิดฟีเจอร์เสริมทั้งชุด
-
         train_rows.append({
             'min_lag1':   min_lag1,
             'min_lag2':   min_lag2,
             'exam_score': exam_sc,
-            'z_lag1':     z_lag1,
-            'z_trend':    z_trend,
             'target':     target,
         })
 
@@ -442,27 +364,13 @@ def predict_min_score(program_id: str) -> Optional[float]:
         print(f"❌ [Strict Mode] อินพุตใช้พยากรณ์ปี 69 ข้อมูลไม่ครบถ้วน -> ปฏิเสธการทำงาน")
         return None
 
-    z_lag1_pred  = peer_relative_score(pid, last_year)
-    z_lag2_pred  = peer_relative_score(pid, prev_year)
-    z_trend_pred = (z_lag1_pred - z_lag2_pred) if not (np.isnan(z_lag1_pred) or np.isnan(z_lag2_pred)) else np.nan
-    if np.isnan(z_lag1_pred) or np.isnan(z_trend_pred):
-        use_peer_feature = False  # ปีที่ใช้พยากรณ์เองก็ต้องมีเพื่อนพอด้วย ไม่งั้นปิดฟีเจอร์เสริม
-
     # ------------------------------------------------------------------
     # ประมวลผลโมเดล Linear Regression คณะใครคณะมัน 100%
-    # เลือกชุดฟีเจอร์ตามว่ามี "เพื่อนร่วมเกณฑ์" พอให้เชื่อ peer-Z ได้หรือไม่
     # ------------------------------------------------------------------
-    if use_peer_feature:
-        features = ['min_lag1', 'min_lag2', 'exam_score', 'z_lag1', 'z_trend']
-        x_pred = np.array([[min_lag1_pred, min_lag2_pred, exam_sc_pred, z_lag1_pred, z_trend_pred]])
-        n_peers = len(peers_by_signature.get(program_signature.get(pid, None), [])) - 1
-        print(f"   ↳ ใช้ฟีเจอร์เสริม peer-Z (เทียบเพื่อนร่วมเกณฑ์ {max(n_peers, 0)} หลักสูตร)")
-    else:
-        features = ['min_lag1', 'min_lag2', 'exam_score']
-        x_pred = np.array([[min_lag1_pred, min_lag2_pred, exam_sc_pred]])
-
+    features = ['min_lag1', 'min_lag2', 'exam_score']
     X_train = np.array([[r[f] for f in features] for r in train_rows])
     y_train = np.array([r['target'] for r in train_rows])
+    x_pred  = np.array([[min_lag1_pred, min_lag2_pred, exam_sc_pred]])
 
     model = LinearRegression()
     model.fit(X_train, y_train)
