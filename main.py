@@ -7,7 +7,6 @@ import pandas as pd
 import numpy as np
 import os, ast
 from sklearn.linear_model import LinearRegression
-import anthropic
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -441,8 +440,26 @@ def evaluate_model():
             errors_baseline2.append((float(np.mean([row[65], row[66], row[67]])) - actual) ** 2)
             abs_errors_b2.append(abs(float(np.mean([row[65], row[66], row[67]])) - actual))  # เพิ่ม)
 
+            # ดึงข้อมูลเพิ่มเติมจาก tcas_main_df
+            prog_row = tcas_main_df[tcas_main_df['program_id'] == pid]
+            uni_name  = str(prog_row['university_name'].values[0]) if len(prog_row) else pid
+            fac_name  = str(prog_row['faculty_name'].values[0])    if len(prog_row) else ''
+            prog_name = str(prog_row['program_name'].values[0])    if len(prog_row) else ''
+            try:
+                crit_w = ast.literal_eval(str(prog_row['scores_criteria'].values[0])) if len(prog_row) else {}
+            except:
+                crit_w = {}
+
             case_details.append({
                 "program_id":  pid,
+                "uni":         uni_name,
+                "faculty":     fac_name,
+                "program":     prog_name,
+                "criteria":    crit_w,
+                "min65":       round(float(row[65]), 2) if not np.isnan(row[65]) else None,
+                "min66":       round(float(row[66]), 2) if not np.isnan(row[66]) else None,
+                "min67":       round(float(row[67]), 2) if not np.isnan(row[67]) else None,
+                "min68":       round(float(row[68]), 2) if not np.isnan(row[68]) else None,
                 "predicted":   round(pred, 2),
                 "actual":      round(actual, 2),
                 "error":       round(error, 2),
@@ -532,12 +549,6 @@ def get_error_analysis():
         )
     }
 
-# เปิด endpoint ให้ดูได้
-@app.get("/api/model-eval")
-def get_model_eval():
-    return eval_result
-
-
 # =====================================================================
 # ส่วนที่ 3: API Endpoints
 # =====================================================================
@@ -618,24 +629,27 @@ def post_prediction(req: PredictRequest):
 
 
 # =====================================================================
-# ส่วนที่ 4: AI Endpoints (Claude)
+# ส่วนที่ 4: AI Endpoints (Gemini)
 # =====================================================================
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
-ai_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
+import urllib.request, json as _json
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 def call_claude(system_prompt: str, user_prompt: str) -> str:
-    if ai_client is None:
-        return "⚠️ ยังไม่ได้ตั้งค่า ANTHROPIC_API_KEY — AI ยังใช้งานไม่ได้"
+    """เรียก Gemini API (ใช้ชื่อ call_claude เพื่อไม่ต้องเปลี่ยน code ที่เรียกใช้)"""
+    if not GEMINI_API_KEY:
+        return "⚠️ ยังไม่ได้ตั้งค่า GEMINI_API_KEY — AI ยังใช้งานไม่ได้"
     try:
-        msg = ai_client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1024,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
-        )
-        return "\n".join(b.text for b in msg.content if getattr(b, "type", None) == "text").strip()
+        url  = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+        body = _json.dumps({
+            "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}]
+        }).encode()
+        req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req) as res:
+            data = _json.loads(res.read())
+        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
     except Exception as e:
-        print(f"❌ Claude error: {e}")
+        print(f"❌ Gemini error: {e}")
         return "❌ ไม่สามารถวิเคราะห์ได้ในขณะนี้"
 
 
