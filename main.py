@@ -640,7 +640,7 @@ def call_claude(system_prompt: str, user_prompt: str) -> str:
     if not GEMINI_API_KEY:
         return "⚠️ ยังไม่ได้ตั้งค่า GEMINI_API_KEY — AI ยังใช้งานไม่ได้"
     try:
-        url  = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+        url  = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={GEMINI_API_KEY}"
         body = _json.dumps({
             "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}]
         }).encode()
